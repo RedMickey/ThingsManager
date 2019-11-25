@@ -1,0 +1,32 @@
+.main-page {
+
+}
+
+.tsize-18 {
+    font-size: 18pt;
+}
+
+.main-container {
+    margin-top: 75px;
+}
+
+.min-logo-img {
+    height: 35px;
+    margin-right: 1rem;
+}
+
+.jumbotron > h1 {
+    font-size: 48pt;
+}
+
+.theme-header::after {
+    position: absolute;
+    content: '';
+    height: 1px;
+    bottom: 4px; 
+    background: #DCDCDC;
+    margin: 0 auto;
+    left: 0;
+    right: 0;
+    width: 95%;
+}

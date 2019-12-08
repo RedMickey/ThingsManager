@@ -1,0 +1,19 @@
+.jumbotron > h1 {
+    font-size: 48pt;
+}
+
+.theme-header::after {
+    position: absolute;
+    content: '';
+    height: 1px;
+    bottom: 4px; 
+    background: #DCDCDC;
+    margin: 0 auto;
+    left: 0;
+    right: 0;
+    width: 95%;
+}
+
+.tsize-18 {
+    font-size: 18pt;
+}

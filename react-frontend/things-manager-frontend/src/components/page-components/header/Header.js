@@ -8,7 +8,7 @@ import {
     NavDropdown,
     Button
 } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
+import { Link, Redirect } from 'react-router-dom';
 import { doRemoveUser } from '../../../actions/userAct';
 import { getUsers } from '../../../selectors/userSelector';
 import './Header.css';
@@ -64,10 +64,10 @@ export class Header extends Component {
                                 <Nav.Link as={Link} to="/">
                                     <span className="oi oi-flag"></span> Помещения
                                 </Nav.Link>
-                                <Nav.Link as={Link} to="/">
+                                <Nav.Link as={Link} to="/test">
                                     <span className="oi oi-map-marker"></span> Места хранения
                                 </Nav.Link>
-                                <Nav.Link as={Link} to="about">
+                                <Nav.Link as={Link} to="thingsList">
                                     <span className="oi oi-briefcase"></span> Вещи
                                 </Nav.Link>
                             </Nav>
@@ -75,17 +75,17 @@ export class Header extends Component {
                                 <Nav.Link as={Link} to="/">
                                     <span className="oi oi-tags"></span> Категории
                                 </Nav.Link>
-                                <NavDropdown title="Настройки" id="collasible-nav-dropdown">
-                                    <NavDropdown.Item as={Link} to="/">Action</NavDropdown.Item>
-                                    <NavDropdown.Item as={Link} to="/">Another action</NavDropdown.Item>
-                                    <NavDropdown.Item as={Link} to="/">Something</NavDropdown.Item>
+                                <NavDropdown title="Опции" id="collasible-nav-dropdown">
+                                    <NavDropdown.Item as={Link} to="/">Цены</NavDropdown.Item>
+                                    <NavDropdown.Item as={Link} to="/">Условия</NavDropdown.Item>
+                                    <NavDropdown.Item as={Link} to="/">О системе</NavDropdown.Item>
+                                    <NavDropdown.Item as={Link} to="/">Контакты</NavDropdown.Item>
                                     <NavDropdown.Divider />
-                                    <NavDropdown.Item onClick={this.onLogout}>Выйти</NavDropdown.Item>
+                                    <NavDropdown.Item as={Link} to="/" onClick={this.onLogout}>Выйти</NavDropdown.Item>
                                 </NavDropdown>
                             </Nav>
                         </>
                     )}
-
                     </Navbar.Collapse>
                 </Container>
             </Navbar>

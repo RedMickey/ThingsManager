@@ -28,6 +28,13 @@ public class UserController {
         return insertedUser;
     }
 
+    @PostMapping(value = "/getUser", produces = "application/json")
+    public User signUp(@RequestBody Map<String, String> req){
+        User user = userService.findByUserEmail(req.get("userEmail"));
+        user.setPassword("");
+        return user;
+    }
+
     @PostMapping(value = "/test", produces = "application/json")
     public Map test(@RequestBody Map<String, Integer> req){
         System.out.println(req.get("ttt2"));

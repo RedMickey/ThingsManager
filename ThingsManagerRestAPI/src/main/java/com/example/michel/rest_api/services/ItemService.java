@@ -32,7 +32,7 @@ public class ItemService {
         return createItemWithPlaces(item);
     }
 
-    private ItemWithPlaces createItemWithPlaces(Item item) {
+    public ItemWithPlaces createItemWithPlaces(Item item) {
         Place[] places = new Place[3];
         Arrays.fill(places, new Place());
         mapPlacesToArray(item.getPlace(), places);

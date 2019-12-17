@@ -10,6 +10,12 @@ import './App.css';
 import MainPage from '../pages/main-page-component/MainPage';
 import ThingsListPage from '../pages/things-list-page-component/ThingsListPage';
 import ThingPage from '../pages/thing-page-component/ThingPage';
+import BuildingsListPage from '../pages/buildings-list-page-component/BuildingsListPage';
+import RoomsListPage from '../pages/rooms-list-page-component/RoomsListPage';
+import SpacesListPage from '../pages/spaces-list-page-component/SpacesListPage';
+import BuildingPage from '../pages/building-page-component/BuildingPage';
+import RoomPage from '../pages/room-page-component/RoomPage';
+import SpacePage from '../pages/space-page-component/SpacePage';
 import Header from '../page-components/header/Header';
 
 const App = () =>
@@ -20,9 +26,14 @@ const App = () =>
         <Container className="content-container">
           <Switch>
               <Route exact path="/" component={MainPage} />
-              <Route path="/things/:id" component={ThingPage} />
-              <Route path="/test" component={ThingPage} />
-              <Route path="/thingsList" component={ThingsListPage} />
+              <Route path="/thing/:id" component={ThingPage} />
+              <Route path="/building/:id" component={BuildingPage} />
+              <Route path="/space/:id" component={SpacePage} />
+              <Route path="/room/:id" component={RoomPage} />
+              <Route path="/things" component={ThingsListPage} />
+              <Route path="/buildings" component={BuildingsListPage} />
+              <Route path="/spaces" component={SpacesListPage} />
+              <Route path="/rooms" component={RoomsListPage} />
           </Switch>
         </Container>
       </Container>

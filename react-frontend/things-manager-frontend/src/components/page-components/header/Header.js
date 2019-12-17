@@ -58,16 +58,16 @@ export class Header extends Component {
                     ) : (
                         <>
                             <Nav className="mr-auto">
-                                <Nav.Link as={Link} to="/">
+                                <Nav.Link as={Link} to="/buildings">
                                     <span className="oi oi-home"></span> Строения
                                 </Nav.Link>
-                                <Nav.Link as={Link} to="/">
+                                <Nav.Link as={Link} to="/rooms">
                                     <span className="oi oi-flag"></span> Помещения
                                 </Nav.Link>
-                                <Nav.Link as={Link} to="/test">
+                                <Nav.Link as={Link} to="/spaces">
                                     <span className="oi oi-map-marker"></span> Места хранения
                                 </Nav.Link>
-                                <Nav.Link as={Link} to="thingsList">
+                                <Nav.Link as={Link} to="/things">
                                     <span className="oi oi-briefcase"></span> Вещи
                                 </Nav.Link>
                             </Nav>

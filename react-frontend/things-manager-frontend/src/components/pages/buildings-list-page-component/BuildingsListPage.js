@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React, { Component } from 'react';
 import { 
     Breadcrumb, 
     Row, 
@@ -17,7 +17,7 @@ import {
 } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
-import './ThingsListPage.css';
+import './BuildingsListPage.css';
 import { getUsers } from '../../../selectors/userSelector';
 import { getAllItemsByUserId } from '../../../api/thingService';
 import * as Moment from 'moment';
@@ -26,8 +26,8 @@ const mapStateToProps = state => ({
     users: getUsers(state),
 });
 
-export class ThingsListPage extends Component {
-
+export class BuildingsListPage extends Component {
+    
     NO_DATA_STRING = "Нет данных";
 
     constructor (props) {
@@ -37,25 +37,7 @@ export class ThingsListPage extends Component {
             thingsWithPlaces: [],
           };
     }
-
-    componentDidMount() {
-
-        getAllItemsByUserId(this.props.users[0].userId, this.props.users[0].token)
-            .then(thingsWithPlaces => {
-                thingsWithPlaces.sort((t1, t2) => {
-                    if (t1.item.itemName > t2.item.itemName) {
-                        return 1;
-                    }
-                    if (t1.item.itemName < t2.item.itemName) {
-                    return -1;
-                    }
-                    return 0;
-                });
-                this.setState({thingsWithPlaces});
-                console.log(this.state.thingsWithPlaces);
-            });
-    }
-
+    
     render() {
         return (
             <div>
@@ -64,7 +46,7 @@ export class ThingsListPage extends Component {
                     <Breadcrumb.Item as={Link} to="/">
                         {this.props.users[0].username}
                     </Breadcrumb.Item>
-                    <Breadcrumb.Item active>Вещи</Breadcrumb.Item>
+                    <Breadcrumb.Item active>Строения</Breadcrumb.Item>
                 </Breadcrumb>
                 <Row className="mb-2">
                     <Col xs={12} sm={8} md={9} >
@@ -99,7 +81,7 @@ export class ThingsListPage extends Component {
                                 aria-controls="example-collapse-text"
                                 aria-expanded={this.state.isExtended}
                             >
-                                <span class="oi oi-plus mr-1"></span> Вещь
+                                <span class="oi oi-plus mr-1"></span> Строение
                             </Button>
                             <Dropdown alignRight={true}>
                                 <Dropdown.Toggle variant="outline-dark" id="dropdown-basic" size="sm">
@@ -122,42 +104,10 @@ export class ThingsListPage extends Component {
                                 <Form>
                                     <Form.Group as={Row} controlId="formPlaintextEmail">
                                         <Form.Label column sm="4" className="text-right">
-                                            Строение
+                                            Название строения
                                         </Form.Label>
                                         <Col sm="8">
                                         <   Form.Control defaultValue="Строение" />
-                                        </Col>
-                                    </Form.Group>
-                                    <Form.Group as={Row} controlId="formPlaintextEmail">
-                                        <Form.Label column sm="4" className="text-right">
-                                            Помещение
-                                        </Form.Label>
-                                        <Col sm="8">
-                                        <   Form.Control defaultValue="Помещение" />
-                                        </Col>
-                                    </Form.Group>
-                                    <Form.Group as={Row} controlId="formPlaintextEmail">
-                                        <Form.Label column sm="4" className="text-right">
-                                            Место хранения
-                                        </Form.Label>
-                                        <Col sm="8">
-                                        <   Form.Control defaultValue="Место хранения" />
-                                        </Col>
-                                    </Form.Group>
-                                    <Form.Group as={Row} controlId="formPlaintextEmail">
-                                        <Form.Label column sm="4" className="text-right">
-                                            Категория
-                                        </Form.Label>
-                                        <Col sm="8">
-                                        <   Form.Control defaultValue="Категория" />
-                                        </Col>
-                                    </Form.Group>
-                                    <Form.Group as={Row} controlId="formPlaintextEmail">
-                                        <Form.Label column sm="4" className="text-right">
-                                            Название вещи
-                                        </Form.Label>
-                                        <Col sm="8">
-                                        <   Form.Control defaultValue="Название вещи" />
                                         </Col>
                                     </Form.Group>
                                     <Form.Group as={Row} controlId="formPlaintextEmail">
@@ -188,11 +138,10 @@ export class ThingsListPage extends Component {
                 <Table responsive hover size="sm">
                     <thead>
                         <tr>
-                            <th>Вещь</th>
-                            <th>Место хранения</th>
-                            <th>Помещение</th>
                             <th>Строение</th>
-                            <th>Категория</th>
+                            <th>Вещей</th>
+                            <th>Мест хранения</th>
+                            <th>Помещений</th>
                             <th>Cоздано</th>
                         </tr>
                     </thead>
@@ -218,4 +167,4 @@ export class ThingsListPage extends Component {
 
 export default connect(
     mapStateToProps
-  )(ThingsListPage);
+  )(BuildingsListPage);

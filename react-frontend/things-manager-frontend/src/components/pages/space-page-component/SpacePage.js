@@ -17,7 +17,7 @@ import {
 } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
-import './ThingPage.css';
+import './SpacePage.css';
 import { getUsers } from '../../../selectors/userSelector';
 import { getItemById } from '../../../api/thingService';
 import * as Moment from 'moment';
@@ -26,7 +26,7 @@ const mapStateToProps = state => ({
     users: getUsers(state),
 });
 
-export class ThingPage extends Component {
+export class SpacePage extends Component {
     NO_DATA_STRING = "Нет данных";
 
     constructor (props) {
@@ -44,25 +44,6 @@ export class ThingPage extends Component {
         console.log(this.props.match.params);
     }
 
-    componentDidMount() {
-        getItemById(
-            this.props.users[0].userId, 
-            this.props.users[0].token,
-            this.props.match.params.id
-            )
-            .then(thingWithPlaces => {
-                this.setState({
-                    thingWithPlaces,
-                    thingName: thingWithPlaces.item.itemName,
-                    placesNames: thingWithPlaces.places.map(place => place.placeName),
-                    creationTimestamp: thingWithPlaces.item.creationTimestamp,
-                    updateTimestamp: thingWithPlaces.item.updateTimestamp,
-                    status: thingWithPlaces.item.itemStatus.statusName,
-                });
-                console.log(this.state.thingWithPlaces);
-            });
-    }
-
     render() {
         return (
             <div>
@@ -71,7 +52,7 @@ export class ThingPage extends Component {
                     <Breadcrumb.Item as={Link} to="/">
                         {this.props.users[0].username}
                     </Breadcrumb.Item>
-                    <Breadcrumb.Item as={Link} to="/thingsList">Вещи</Breadcrumb.Item>
+                    <Breadcrumb.Item as={Link} to="/thingsList">Места хранения</Breadcrumb.Item>
                     <Breadcrumb.Item active>{this.state.thingName}</Breadcrumb.Item>
                 </Breadcrumb>
                 <Row>
@@ -106,30 +87,22 @@ export class ThingPage extends Component {
                     <Col xs={12} md={4}>
                         <Card bg="light"> 
                             <Card.Body>
-                                {this.state.placesNames[2] 
-                                    ? <>Вещь <b>«{this.state.thingName}»</b> находится в месте ханения <Link to="/">{this.state.placesNames[2]}</Link></>
-                                    : this.NO_DATA_STRING
-                                }
+                                <div>Количество вещей: 0</div>
+                                <Link to="/">Все вещи этого места хранения</Link>
                             </Card.Body>
                         </Card>
                     </Col>
                     <Col xs={12} md={4}>
                         <Card bg="light" className="mt-3 mt-md-0"> 
                             <Card.Body>
-                                {this.state.placesNames[1] 
-                                    ? <>Вещь <b>«{this.state.thingName}»</b> находится в помещении <Link to="/">{this.state.placesNames[1]}</Link></>
-                                    : this.NO_DATA_STRING
-                                }
+                                Место хранения «jyj» находится в помещении <Link to="/">помещении</Link>
                             </Card.Body>
                         </Card>
                     </Col>
                     <Col xs={12} md={4}>
                         <Card bg="light" className="mt-3 mt-md-0"> 
                             <Card.Body>
-                                {this.state.placesNames[0] 
-                                    ? <>Вещь <b>«{this.state.thingName}»</b> находится в строении <Link to="/">{this.state.placesNames[0]}</Link></>
-                                    : this.NO_DATA_STRING
-                                }
+                                Помещение «hdhfg» находится в <Link to="/">строении</Link>
                             </Card.Body>
                         </Card>
                     </Col>
@@ -156,7 +129,7 @@ export class ThingPage extends Component {
                     <Collapse in={this.state.isExtended}>
                         <Card bg="light" className="mb-3"> 
                             <Card.Body>
-                                <Card.Title>Редактирование вещи «Название вещи»</Card.Title>
+                                <Card.Title>Редактирование места хранения «места хранения»</Card.Title>
                                 <hr/>
                                 <Form>
                                     <Form.Group as={Row} controlId="formPlaintextEmail">
@@ -177,26 +150,10 @@ export class ThingPage extends Component {
                                     </Form.Group>
                                     <Form.Group as={Row} controlId="formPlaintextEmail">
                                         <Form.Label column sm="4" className="text-right">
-                                            Место хранения
+                                            Название  места хранения
                                         </Form.Label>
                                         <Col sm="8">
                                         <   Form.Control defaultValue="Место хранения" />
-                                        </Col>
-                                    </Form.Group>
-                                    <Form.Group as={Row} controlId="formPlaintextEmail">
-                                        <Form.Label column sm="4" className="text-right">
-                                            Категория
-                                        </Form.Label>
-                                        <Col sm="8">
-                                        <   Form.Control defaultValue="Категория" />
-                                        </Col>
-                                    </Form.Group>
-                                    <Form.Group as={Row} controlId="formPlaintextEmail">
-                                        <Form.Label column sm="4" className="text-right">
-                                            Название вещи
-                                        </Form.Label>
-                                        <Col sm="8">
-                                        <   Form.Control defaultValue="Название вещи" />
                                         </Col>
                                     </Form.Group>
                                     <Form.Group as={Row} controlId="formPlaintextEmail">
@@ -231,4 +188,4 @@ export class ThingPage extends Component {
 
 export default connect(
     mapStateToProps
-  )(ThingPage);
+  )(SpacePage);

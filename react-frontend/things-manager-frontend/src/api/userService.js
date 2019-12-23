@@ -1,11 +1,11 @@
-import GLOBAL_CONFIG from '../globalConfig';
+import { BACKEND_CONFIG } from '../globalConfig';
 import { handleJsonResponse } from './utils/requestHandler';
 
 export function sendLoginRequest(loginFormData) {
-    return fetch(GLOBAL_CONFIG.serverURL + "/oauth/token", {
+    return fetch(BACKEND_CONFIG.serverURL + "/oauth/token", {
         method: "POST",
         headers: {
-        "Authorization": "Basic " + btoa(`${GLOBAL_CONFIG.webClientId}:${GLOBAL_CONFIG.webClientSecret}`),
+        "Authorization": "Basic " + btoa(`${BACKEND_CONFIG.webClientId}:${BACKEND_CONFIG.webClientSecret}`),
         },
         mode: "cors",
         body: loginFormData
@@ -14,7 +14,7 @@ export function sendLoginRequest(loginFormData) {
 }
 
 export function sendRegistrationRequest(user) {
-    return fetch(GLOBAL_CONFIG.serverURL + "/user/sign-up", {
+    return fetch(BACKEND_CONFIG.serverURL + "/user/sign-up", {
         method: "POST",
         headers: {
             "Content-Type": "application/json;charset=utf-8",
@@ -26,7 +26,7 @@ export function sendRegistrationRequest(user) {
 }
 
 export function getUserData(userEmail, token) {
-    return fetch(GLOBAL_CONFIG.serverURL + "/user/getUser", {
+    return fetch(BACKEND_CONFIG.serverURL + "/user/getUser", {
         method: "POST",
         headers: {
             "Content-Type": "application/json;charset=utf-8",

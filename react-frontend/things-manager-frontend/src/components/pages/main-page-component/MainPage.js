@@ -14,7 +14,7 @@ import { Link } from 'react-router-dom';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import { doUpdateUser } from '../../../actions/userAct';
-import GLOBAL_CONFIG from '../../../globalConfig';
+import { BACKEND_CONFIG } from '../../../globalConfig';
 import { getUsers } from '../../../selectors/userSelector';
 import { sendLoginRequest, sendRegistrationRequest, getUserData } from '../../../api/userService';
 import './MainPage.css';
@@ -110,21 +110,11 @@ export class MainPage extends Component {
     }
 
     onLoginSubmit(values) {
-        /*event.preventDefault();
-        event.stopPropagation();
-
-        this.setState({
-            validated: true,
-        });
-
-        const form = event.currentTarget;
-        if (form.checkValidity() === false) return;*/
-
         let loginFormData = new FormData();
         loginFormData.append("username", values.email);
         loginFormData.append("password", values.password);
-        loginFormData.append("grant_type", GLOBAL_CONFIG.grantType);
-        loginFormData.append("client_id", GLOBAL_CONFIG.webClientId);
+        loginFormData.append("grant_type", BACKEND_CONFIG.grantType);
+        loginFormData.append("client_id", BACKEND_CONFIG.webClientId);
 
         sendLoginRequest(loginFormData)
         /*fetch(GLOBAL_CONFIG.serverURL + "/oauth/token", {

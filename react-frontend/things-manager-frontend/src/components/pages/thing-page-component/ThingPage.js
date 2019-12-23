@@ -46,9 +46,9 @@ export class ThingPage extends Component {
 
     componentDidMount() {
         getItemById(
+            this.props.match.params.id,
             this.props.users[0].userId, 
-            this.props.users[0].token,
-            this.props.match.params.id
+            this.props.users[0].token
             )
             .then(thingWithPlaces => {
                 this.setState({

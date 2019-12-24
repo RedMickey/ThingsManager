@@ -5,10 +5,13 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.GenerationTime;
+import org.hibernate.search.annotations.Field;
+import org.hibernate.search.annotations.Indexed;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
 
+@Indexed
 @Entity
 @Data
 @AllArgsConstructor
@@ -19,6 +22,7 @@ public class Place {
     @Column(name = "id_place")
     private Integer idPlace;
     private String description;
+    @Field
     @Column(name = "place_name")
     private String placeName;
     /*@Column(name = "id_outer_place")

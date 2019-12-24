@@ -5,9 +5,12 @@ import com.example.michel.rest_api.models.auxiliary_models.response_body.buildin
 import com.example.michel.rest_api.models.auxiliary_models.response_body.building.BuildingStatistics;
 import com.example.michel.rest_api.models.auxiliary_models.response_body.room.RoomData;
 import com.example.michel.rest_api.models.auxiliary_models.response_body.room.RoomStatistics;
+import com.example.michel.rest_api.models.auxiliary_models.response_body.space.SpaceData;
+import com.example.michel.rest_api.models.auxiliary_models.response_body.space.SpaceStatistics;
 import com.example.michel.rest_api.services.PlaceService;
 import com.example.michel.rest_api.services.auxiliary_services.BuildingStatisticsService;
 import com.example.michel.rest_api.services.auxiliary_services.RoomStatisticsService;
+import com.example.michel.rest_api.services.auxiliary_services.SpaceStatisticsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -30,6 +33,9 @@ public class PlaceController {
 
     @Autowired
     private RoomStatisticsService roomStatisticsService;
+
+    @Autowired
+    private SpaceStatisticsService spaceStatisticsService;
 
     /*@PostMapping(value = "/getPlaceById", produces = "application/json")
     public Place getPlaceById(@RequestBody Map<String, Integer> req){
@@ -62,11 +68,25 @@ public class PlaceController {
 
     @PostMapping(value = "/getRoomData", produces = "application/json")
     public RoomData getRoomData(@RequestBody Map<String, Integer> req) {
-        Place building = placeService.findPlaceByIdUserAndIdPlace(req.get("userId"), req.get("placeId"));
+        Place room = placeService.findPlaceByIdUserAndIdPlace(req.get("userId"), req.get("placeId"));
         RoomStatistics roomStatistics = roomStatisticsService.getRoomStatisticsByPlaceId(req.get("userId"), req.get("placeId"));
         return new RoomData(
-                roomStatistics.getSpaceCount(), roomStatistics.getThingCount(), building
+                roomStatistics.getSpaceCount(), roomStatistics.getThingCount(), room
         );
+    }
+
+    /***************************************************Space****************************************************************/
+
+    @PostMapping(value = "/getSpaceStatistics", produces = "application/json")
+    public List<SpaceStatistics> getSpaceStatistics(@RequestBody Map<String, Integer> req) {
+        return spaceStatisticsService.getSpaceStatisticsList(req.get("userId"));
+    }
+
+    @PostMapping(value = "/getSpaceData", produces = "application/json")
+    public SpaceData getSpaceData(@RequestBody Map<String, Integer> req) {
+        Place space = placeService.findPlaceByIdUserAndIdPlace(req.get("userId"), req.get("placeId"));
+        SpaceStatistics spaceStatistics = spaceStatisticsService.getSpaceStatisticsByPlaceId(req.get("userId"), req.get("placeId"));
+        return new SpaceData(spaceStatistics.getThingCount(), space);
     }
 
     /*******************************************************General************************************************************/

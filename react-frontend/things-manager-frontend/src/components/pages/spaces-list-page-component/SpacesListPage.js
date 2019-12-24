@@ -13,13 +13,21 @@ import {
     ButtonToolbar,
     Collapse,
     Card,
-    Table
+    Table,
+    Alert
 } from 'react-bootstrap';
+
+import { Typeahead, AsyncTypeahead } from 'react-bootstrap-typeahead';
+import 'react-bootstrap-typeahead/css/Typeahead.css';
+import 'react-bootstrap-typeahead/css/Typeahead-bs4.css';
+
 import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
+import { Formik } from 'formik';
+import * as Yup from 'yup';
 import './SpacesListPage.css';
 import { getUsers } from '../../../selectors/userSelector';
-import { getAllItemsByUserId } from '../../../api/thingService';
+import { savePlace, getSpaceStatistics, getPlacesByPlaceType } from '../../../api/placeService';
 import * as Moment from 'moment';
 
 const mapStateToProps = state => ({
@@ -34,8 +42,63 @@ export class SpacesListPage extends Component {
         super(props);
         this.state = {
             isExtended : false,
-            thingsWithPlaces: [],
-          };
+            spaceStatistics: [],
+            addedSuccessfully: false,
+            addingError: false,
+            options: [],
+            selectedBuilding: undefined,
+        };
+
+        this.spaceSchema = Yup.object().shape({
+            buildingName: Yup.string(),
+            roomName: Yup.string(),
+            spaceName: Yup.string()
+                .required('Заполните это поле'),
+            description: Yup.string(),
+        });
+
+        this.onSpaceAdd = this.onSpaceAdd.bind(this);
+    }
+
+    componentDidMount() {
+        this.downloadSpaceStatistics();
+
+        /*getPlacesByPlaceType(1 ,this.props.users[0].userId, this.props.users[0].token)
+            .then((buildings) => {
+                this.setState({
+                    options: buildings.map(building => ({id: building.idPlace, name: building.placeName}))
+                });
+            });*/
+    }
+
+    downloadSpaceStatistics() {
+        getSpaceStatistics(this.props.users[0].userId, this.props.users[0].token)
+            .then(spaceStatistics => {
+                this.setState({spaceStatistics});
+            })
+            .catch(err => console.log(err));
+    }
+
+    onSpaceAdd(values) {
+        console.log(values);
+        savePlace({
+            placeName: values.roomName,
+            description: values.description,
+            idPlaceType: 2,
+            outerPlace: {idPlace: this.state.selectedBuilding.id},
+            idUser: this.props.users[0].userId,
+        },
+        this.props.users[0].token
+        )
+        .then(savedRoom => {
+            console.log(savedRoom);
+            this.setState({addedSuccessfully: true});
+            this.downloadRoomStatistics();
+        })
+        .catch(err => {
+            console.log(err);
+            this.setState({addingError: true});
+        });
     }
 
     render() {
@@ -101,53 +164,114 @@ export class SpacesListPage extends Component {
                     <Card bg="light" className="mb-3"> 
                             <Card.Body>
                                 <Card.Title>Добавление новой вещи</Card.Title>
-                                <Form>
-                                    <Form.Group as={Row} controlId="formPlaintextEmail">
-                                        <Form.Label column sm="4" className="text-right">
-                                            Строение
-                                        </Form.Label>
-                                        <Col sm="8">
-                                        <   Form.Control defaultValue="Строение" />
-                                        </Col>
-                                    </Form.Group>
-                                    <Form.Group as={Row} controlId="formPlaintextEmail">
-                                        <Form.Label column sm="4" className="text-right">
-                                            Помещение
-                                        </Form.Label>
-                                        <Col sm="8">
-                                        <   Form.Control defaultValue="Помещение" />
-                                        </Col>
-                                    </Form.Group>
-                                    <Form.Group as={Row} controlId="formPlaintextEmail">
-                                        <Form.Label column sm="4" className="text-right">
-                                            Название места хранения
-                                        </Form.Label>
-                                        <Col sm="8">
-                                        <   Form.Control defaultValue="Место хранения" />
-                                        </Col>
-                                    </Form.Group>
-                                    <Form.Group as={Row} controlId="formPlaintextEmail">
-                                        <Form.Label column sm="4" className="text-right">
-                                            Примечание
-                                        </Form.Label>
-                                        <Col sm="8">
-                                        <   Form.Control as="textarea" rows="3" defaultValue="Примечание" />
-                                        </Col>
-                                    </Form.Group>
+                                {this.state.addedSuccessfully &&
+                                    <Alert variant="success" onClose={() => this.setState({addedSuccessfully: false})} dismissible>
+                                        Помещение успешно добавлено
+                                    </Alert>
+                                }
+                                <Formik
+                                    validationSchema={this.spaceSchema}
+                                    onSubmit={(values, actions) => {
+                                        //this.onRoomAdd(values);
+                                        actions.resetForm();
+                                    }}
+                                    initialValues={{
+                                        spaceName: "",
+                                        description: "",
+                                    }}
+                                >
+                                    {({
+                                        handleSubmit,
+                                        handleChange,
+                                        handleBlur,
+                                        values,
+                                        touched,
+                                        isValid,
+                                        errors,
+                                        resetForm,
+                                    }) => (
+                                        <Form noValidate onSubmit={handleSubmit}>
+                                            <Form.Group as={Row} controlId="formPlaintextEmail">
+                                                <Form.Label column sm="4" className="text-right">
+                                                    Строение
+                                                </Form.Label>
+                                                <Col sm="8">
+                                                    {/*<Form.Control defaultValue="Строение" />*/}
+                                                    <Typeahead
+                                                        labelKey="buildingTypeahead"
+                                                        options={this.state.options}
+                                                        placeholder="Выберите строение"
+                                                        onChange={this.onTypeaheadValueChange}
+                                                    />
+                                                </Col>
+                                            </Form.Group>
+                                            <Form.Group as={Row} controlId="formPlaintextEmail">
+                                                <Form.Label column sm="4" className="text-right">
+                                                    Помещение
+                                                </Form.Label>
+                                                <Col sm="8">
+                                                    {/*<Form.Control defaultValue="Помещение" />*/}
+                                                    <Typeahead
+                                                        labelKey="roomTypeahead"
+                                                        options={this.state.options}
+                                                        placeholder="Выберите строение"
+                                                        onChange={this.onTypeaheadValueChange}
+                                                    />
+                                                </Col>
+                                            </Form.Group>
+                                            <Form.Group as={Row} controlId="formPlaintextEmail">
+                                                <Form.Label column sm="4" className="text-right">
+                                                    Название места хранения
+                                                </Form.Label>
+                                                <Col sm="8">
+                                                    <Form.Control
+                                                        placeholder = "Название места хранения"
+                                                        type = "text"
+                                                        name = "spaceName"
+                                                        value={values.spaceName}
+                                                        onChange={handleChange}
+                                                        isValid={touched.spaceName && !errors.spaceName}
+                                                        isInvalid={!!errors.spaceName}
+                                                    />
+                                                    <Form.Control.Feedback type="invalid">
+                                                        {errors.spaceName}
+                                                    </Form.Control.Feedback>
+                                                </Col>
+                                            </Form.Group>
+                                            <Form.Group as={Row} controlId="formPlaintextEmail">
+                                                <Form.Label column sm="4" className="text-right">
+                                                    Примечание
+                                                </Form.Label>
+                                                <Col sm="8">
+                                                    <Form.Control as="textarea" rows="3"
+                                                        placeholder = "Примечание"
+                                                        name = "description"
+                                                        value={values.description}
+                                                        onChange={handleChange}
+                                                        isValid={touched.description && !errors.description}
+                                                        isInvalid={!!errors.description}
+                                                    />
+                                                    <Form.Control.Feedback type="invalid">
+                                                        {errors.description}
+                                                    </Form.Control.Feedback>
+                                                </Col>
+                                            </Form.Group>
 
-                                    <Row className="text-right">
-                                        <Col xs={0} sm={4}>
-                                        </Col>
-                                        <Col xs={12} sm={8} className="text-left">
-                                            <Button variant="success" type="submit" className="mr-2">
-                                                Добавить
-                                            </Button>
-                                            <Button variant="light" type="submit">
-                                                Отмена
-                                            </Button>
-                                        </Col>
-                                    </Row>
-                                </Form>
+                                            <Row className="text-right">
+                                                <Col xs={0} sm={4}>
+                                                </Col>
+                                                <Col xs={12} sm={8} className="text-left">
+                                                    <Button variant="success" type="submit" className="mr-2">
+                                                        Добавить
+                                                    </Button>
+                                                    <Button variant="light" onClick={() => {this.setState({isExtended: false}); resetForm()}}>
+                                                        Отмена
+                                                    </Button>
+                                                </Col>
+                                            </Row>
+                                        </Form>
+                                    )}
+                                </Formik>
                             </Card.Body>
                         </Card>
                 </Collapse>
@@ -162,16 +286,27 @@ export class SpacesListPage extends Component {
                         </tr>
                     </thead>
                     <tbody>
-                        {this.state.thingsWithPlaces.map(thingWithPlaces => (
+                        {this.state.spaceStatistics.map(space => (
                             <tr>
                                 <td>
-                                    <Link to={`/thing/${thingWithPlaces.item.idItem}`}>{thingWithPlaces.item.itemName}</Link>
+                                    <Link to={`/space/${space.idPlace}`}>{space.placeName}</Link>
                                 </td>
-                                {thingWithPlaces.places.map(place => (
-                                    <td>{place.placeName || this.NO_DATA_STRING}</td>
-                                ))}
-                                <td>{(thingWithPlaces.item.category && thingWithPlaces.item.category.categoryName) || this.NO_DATA_STRING}</td>
-                                <td>{Moment(thingWithPlaces.item.creationTimestamp).format("HH:mm DD.MM.YY")}</td>
+                                <td>
+                                    <Link to="/things">{space.thingCount}</Link>
+                                </td>
+                                <td>
+                                    {space.roomName 
+                                        ? <Link to={`/room/${space.idRoom}`}>{space.roomName}</Link>
+                                        : <div>{this.NO_DATA_STRING}</div>
+                                    }
+                                </td>
+                                <td>
+                                    {space.buildingName 
+                                        ? <Link to={`/building/${space.idBuilding}`}>{space.buildingName}</Link>
+                                        : <div>{this.NO_DATA_STRING}</div>
+                                    }
+                                </td>
+                                <td>{Moment(space.creationTimestamp).format("HH:mm DD.MM.YY")}</td>
                             </tr>
                         ))}
                     </tbody>

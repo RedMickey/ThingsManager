@@ -15,11 +15,19 @@ import {
     Card,
     Table
 } from 'react-bootstrap';
+
+import { Typeahead, AsyncTypeahead } from 'react-bootstrap-typeahead';
+import 'react-bootstrap-typeahead/css/Typeahead.css';
+import 'react-bootstrap-typeahead/css/Typeahead-bs4.css';
+
 import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
+import { Formik } from 'formik';
+import * as Yup from 'yup';
 import './SpacePage.css';
 import { getUsers } from '../../../selectors/userSelector';
-import { getItemById } from '../../../api/thingService';
+import { DeletionErrorModal } from '../../page-components/deletion_error_modal/DeletionErrorModal';
+import { getSpaceDataById, savePlace, deletePlaceById, getPlacesByPlaceType } from '../../../api/placeService';
 import * as Moment from 'moment';
 
 const mapStateToProps = state => ({
@@ -33,15 +41,54 @@ export class SpacePage extends Component {
         super(props);
         this.state = {
             isExtended: false,
-            thingWithPlaces: undefined,
-            thingName: "",
-            placesNames: Array(3),
+            thingCount: undefined,
+            selectedBuilding: {},
+            spaceName: "",
+            space: undefined,
             creationTimestamp: undefined,
             updateTimestamp: undefined,
             status: "",
+            updatedSuccessfully: false,
+            isShownDeletionErrorModal: false,
+            deletionErrorMessage: "",
+            options: [],
         };
 
-        console.log(this.props.match.params);
+        this.spaceSchema = Yup.object().shape({
+            buildingName: Yup.string(),
+            roomName: Yup.string(),
+            spaceName: Yup.string()
+                .required('Заполните это поле'),
+            description: Yup.string(),
+        });
+    }
+
+    componentDidMount() {
+        getSpaceDataById(
+            this.props.match.params.id,
+            this.props.users[0].userId, 
+            this.props.users[0].token
+            )
+            .then(spaceData => {
+                this.setState({
+                    thingCount: spaceData.thingCount,
+                    spaceName: spaceData.place.placeName,
+                    // buildingName: spaceData.place.outerPlace.placeName,
+                    space: spaceData.place,
+                    creationTimestamp: spaceData.place.creationTimestamp,
+                    updateTimestamp: spaceData.place.updateTimestamp,
+                    status: spaceData.place.itemStatus.statusName,
+                    // selectedBuilding: {id: roomData.place.outerPlace.idPlace, name: roomData.place.outerPlace.placeName},
+                });
+                console.log(spaceData);
+            });
+
+        getPlacesByPlaceType(1 ,this.props.users[0].userId, this.props.users[0].token)
+            .then((buildings) => {
+                this.setState({
+                    options: buildings.map(building => ({id: building.idPlace, name: building.placeName}))
+                });
+            });
     }
 
     render() {
@@ -53,11 +100,11 @@ export class SpacePage extends Component {
                         {this.props.users[0].username}
                     </Breadcrumb.Item>
                     <Breadcrumb.Item as={Link} to="/thingsList">Места хранения</Breadcrumb.Item>
-                    <Breadcrumb.Item active>{this.state.thingName}</Breadcrumb.Item>
+                    <Breadcrumb.Item active>{this.state.spaceName}</Breadcrumb.Item>
                 </Breadcrumb>
                 <Row>
                     <Col>
-                        <h1 className="px-3 theme-header">{this.state.thingName}</h1>
+                        <h1 className="px-3 theme-header">{this.state.spaceName}</h1>
                     </Col>
                 </Row>
 
@@ -87,7 +134,7 @@ export class SpacePage extends Component {
                     <Col xs={12} md={4}>
                         <Card bg="light"> 
                             <Card.Body>
-                                <div>Количество вещей: 0</div>
+                                <div>Количество вещей: {this.state.thingCount}</div>
                                 <Link to="/">Все вещи этого места хранения</Link>
                             </Card.Body>
                         </Card>

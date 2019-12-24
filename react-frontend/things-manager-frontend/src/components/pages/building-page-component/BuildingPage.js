@@ -39,7 +39,7 @@ export class BuildingPage extends Component {
             roomCount: undefined,
             spaceCount: undefined,
             thingCount: undefined,
-            buildingName: "456",
+            buildingName: "",
             building: undefined,
             creationTimestamp: undefined,
             updateTimestamp: undefined,

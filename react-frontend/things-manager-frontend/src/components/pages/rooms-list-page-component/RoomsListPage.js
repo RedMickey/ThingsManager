@@ -16,13 +16,18 @@ import {
     Table,
     Alert
 } from 'react-bootstrap';
+
+import { Typeahead, AsyncTypeahead } from 'react-bootstrap-typeahead';
+import 'react-bootstrap-typeahead/css/Typeahead.css';
+import 'react-bootstrap-typeahead/css/Typeahead-bs4.css';
+
 import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import './RoomsListPage.css';
 import { getUsers } from '../../../selectors/userSelector';
-import { savePlace, getRoomStatistics } from '../../../api/placeService';
+import { savePlace, getRoomStatistics, getPlacesByPlaceType } from '../../../api/placeService';
 import * as Moment from 'moment';
 
 const mapStateToProps = state => ({
@@ -40,6 +45,8 @@ export class RoomsListPage extends Component {
             roomStatistics: [],
             addedSuccessfully: false,
             addingError: false,
+            options: [],
+            selectedBuilding: undefined,
         };
 
         this.roomSchema = Yup.object().shape({
@@ -49,11 +56,19 @@ export class RoomsListPage extends Component {
             description: Yup.string(),
         });
 
+        this.onTypeaheadValueChange = this.onTypeaheadValueChange.bind(this);
         this.onRoomAdd = this.onRoomAdd.bind(this);
     }
 
     componentDidMount() {
         this.downloadRoomStatistics();
+
+        getPlacesByPlaceType(1 ,this.props.users[0].userId, this.props.users[0].token)
+            .then((buildings) => {
+                this.setState({
+                    options: buildings.map(building => ({id: building.idPlace, name: building.placeName}))
+                });
+            });
     }
 
     downloadRoomStatistics() {
@@ -67,9 +82,10 @@ export class RoomsListPage extends Component {
     onRoomAdd(values) {
         console.log(values);
         savePlace({
-            placeName: values.buildingName,
+            placeName: values.roomName,
             description: values.description,
-            idPlaceType: 1,
+            idPlaceType: 2,
+            outerPlace: {idPlace: this.state.selectedBuilding.id},
             idUser: this.props.users[0].userId,
         },
         this.props.users[0].token
@@ -83,6 +99,13 @@ export class RoomsListPage extends Component {
             console.log(err);
             this.setState({addingError: true});
         });
+    }
+
+    onTypeaheadValueChange(selectedOptions) {
+        this.setState({
+            selectedBuilding: selectedOptions[0]
+        });
+        console.log(selectedOptions);
     }
 
     render() {
@@ -180,7 +203,13 @@ export class RoomsListPage extends Component {
                                                     Строение
                                                 </Form.Label>
                                                 <Col sm="8">
-                                                <   Form.Control defaultValue="Строение" />
+                                                    {/*<Form.Control defaultValue="Строение" />*/}
+                                                    <Typeahead
+                                                        labelKey="name"
+                                                        options={this.state.options}
+                                                        placeholder="Выберите строение"
+                                                        onChange={this.onTypeaheadValueChange}
+                                                    />
                                                 </Col>
                                             </Form.Group>
                                             <Form.Group as={Row} controlId="formPlaintextEmail">
@@ -198,7 +227,7 @@ export class RoomsListPage extends Component {
                                                         isInvalid={!!errors.roomName}
                                                     />
                                                     <Form.Control.Feedback type="invalid">
-                                                        {errors.password}
+                                                        {errors.roomName}
                                                     </Form.Control.Feedback>
                                                 </Col>
                                             </Form.Group>
@@ -216,7 +245,7 @@ export class RoomsListPage extends Component {
                                                         isInvalid={!!errors.description}
                                                     />
                                                     <Form.Control.Feedback type="invalid">
-                                                        {errors.password}
+                                                        {errors.description}
                                                     </Form.Control.Feedback>
                                                 </Col>
                                             </Form.Group>

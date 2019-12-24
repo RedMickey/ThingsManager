@@ -85,8 +85,36 @@ export function getRoomStatistics(userId, token) {
     .then(handleJsonResponse);
 }
 
-export function getRoomData(placeId ,userId, token) {
+export function getRoomDataById(placeId ,userId, token) {
     return fetch(BACKEND_CONFIG.serverURL + "/place/getRoomData", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json;charset=utf-8",
+            "Authorization": `Bearer ${token}`,
+        },
+        mode: "cors",
+        body: JSON.stringify({placeId, userId}),
+    })
+    .then(handleJsonResponse);
+}
+
+/***************************************************Space****************************************************************/
+
+export function getSpaceStatistics(userId, token) {
+    return fetch(BACKEND_CONFIG.serverURL + "/place/getSpaceStatistics", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json;charset=utf-8",
+            "Authorization": `Bearer ${token}`,
+        },
+        mode: "cors",
+        body: JSON.stringify({userId}),
+    })
+    .then(handleJsonResponse);
+}
+
+export function getSpaceDataById(placeId ,userId, token) {
+    return fetch(BACKEND_CONFIG.serverURL + "/place/getSpaceData", {
         method: "POST",
         headers: {
             "Content-Type": "application/json;charset=utf-8",

@@ -10,16 +10,24 @@ import {
     Dropdown,
     InputGroup,
     FormControl,
-    ButtonToolbar,
+    Alert,
     Collapse,
     Card,
     Table
 } from 'react-bootstrap';
+
+import { Typeahead, AsyncTypeahead } from 'react-bootstrap-typeahead';
+import 'react-bootstrap-typeahead/css/Typeahead.css';
+import 'react-bootstrap-typeahead/css/Typeahead-bs4.css';
+
 import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
+import { Formik } from 'formik';
+import * as Yup from 'yup';
 import './RoomPage.css';
 import { getUsers } from '../../../selectors/userSelector';
-import { getItemById } from '../../../api/thingService';
+import { DeletionErrorModal } from '../../page-components/deletion_error_modal/DeletionErrorModal';
+import { getRoomDataById, savePlace, deletePlaceById, getPlacesByPlaceType } from '../../../api/placeService';
 import * as Moment from 'moment';
 
 const mapStateToProps = state => ({
@@ -33,15 +41,93 @@ export class RoomPage extends Component {
         super(props);
         this.state = {
             isExtended: false,
-            thingWithPlaces: undefined,
-            thingName: "",
-            placesNames: Array(3),
+            spaceCount: undefined,
+            thingCount: undefined,
+            selectedBuilding: {},
+            roomName: "",
+            room: undefined,
             creationTimestamp: undefined,
             updateTimestamp: undefined,
             status: "",
+            updatedSuccessfully: false,
+            isShownDeletionErrorModal: false,
+            deletionErrorMessage: "",
+            options: [],
         };
 
-        console.log(this.props.match.params);
+        this.roomSchema = Yup.object().shape({
+            buildingName: Yup.string(),
+            roomName: Yup.string()
+                .required('Заполните это поле'),
+            description: Yup.string(),
+        });
+
+        this.onTypeaheadValueChange = this.onTypeaheadValueChange.bind(this);
+    }
+
+    componentDidMount() {
+        getRoomDataById(
+            this.props.match.params.id,
+            this.props.users[0].userId, 
+            this.props.users[0].token
+            )
+            .then(roomData => {
+                this.setState({
+                    spaceCount: roomData.spaceCount,
+                    thingCount: roomData.thingCount,
+                    roomName: roomData.place.placeName,
+                    buildingName: roomData.place.outerPlace.placeName,
+                    room: roomData.place,
+                    creationTimestamp: roomData.place.creationTimestamp,
+                    updateTimestamp: roomData.place.updateTimestamp,
+                    status: roomData.place.itemStatus.statusName,
+                    selectedBuilding: {id: roomData.place.outerPlace.idPlace, name: roomData.place.outerPlace.placeName},
+                });
+                console.log(roomData);
+            });
+
+        getPlacesByPlaceType(1 ,this.props.users[0].userId, this.props.users[0].token)
+            .then((buildings) => {
+                this.setState({
+                    options: buildings.map(building => ({id: building.idPlace, name: building.placeName}))
+                });
+            });
+    }
+
+    onTypeaheadValueChange(selectedOptions) {
+        this.setState({
+            selectedBuilding: selectedOptions[0]
+        });
+        console.log(selectedOptions);
+    }
+
+    onRoomUpdate(values) {
+        console.log(values);
+        
+        let updatedPlace = Object.assign(this.state.building);
+        updatedPlace.outerPlace = {idPlace: this.state.selectedBuilding.id};
+        updatedPlace.placeName = values.roomName;
+        updatedPlace.description = values.description;
+
+        savePlace(
+            updatedPlace,
+            this.props.users[0].token
+        )
+        .then(savedRoom => {
+            console.log(savedRoom);
+            this.setState({
+                updatedSuccessfully: true,
+                room: savedRoom,
+                roomName: savedRoom.placeName,
+                creationTimestamp: savedRoom.creationTimestamp,
+                updateTimestamp: savedRoom.updateTimestamp,
+                status: savedRoom.itemStatus.statusName,
+            });
+        })
+        .catch(err => {
+            console.log(err);
+            this.setState({updatingError: true});
+        });
     }
 
     render() {
@@ -53,7 +139,7 @@ export class RoomPage extends Component {
                         {this.props.users[0].username}
                     </Breadcrumb.Item>
                     <Breadcrumb.Item as={Link} to="/thingsList">Помещения</Breadcrumb.Item>
-                    <Breadcrumb.Item active>{this.state.thingName}</Breadcrumb.Item>
+                    <Breadcrumb.Item active>{this.state.roomName}</Breadcrumb.Item>
                 </Breadcrumb>
                 <Row>
                     <Col>
@@ -66,6 +152,11 @@ export class RoomPage extends Component {
                         <Image src="/images/box.jpg" className="img-fluid" thumbnail />
                     </Col>
                 </Row>
+                <DeletionErrorModal
+                    show={this.state.isShownDeletionErrorModal}
+                    onHide={() => this.setState({isShownDeletionErrorModal: false})}
+                    errorMessage={this.state.deletionErrorMessage}
+                />
                 <Row className="mt-3">
                     <Col xs={12} md={6}>
                         <Card bg="light"> 
@@ -87,23 +178,24 @@ export class RoomPage extends Component {
                     <Col xs={12} md={4}>
                         <Card bg="light"> 
                             <Card.Body>
-                                <div>Количество вещей: 0</div>
-                                <Link to="/">Все вещи этого помещения</Link>
+                                <div>Количество вещей: {this.state.thingCount}</div>
+                                <Link to="/">Все <b>вещи</b> этого строения</Link>
                             </Card.Body>
                         </Card>
                     </Col>
                     <Col xs={12} md={4}>
                         <Card bg="light" className="mt-3 mt-md-0"> 
                             <Card.Body>
-                                <div>Количество мест хранения: 0</div>
-                                <Link to="/">Все места хранения этого помещения</Link>
+                                <div>Количество мест хранения: {this.state.spaceCount}</div>
+                                <Link to="/">Все <b>места хранения</b> этого строения</Link>
                             </Card.Body>
                         </Card>
                     </Col>
                     <Col xs={12} md={4}>
                         <Card bg="light" className="mt-3 mt-md-0"> 
                             <Card.Body>
-                                Помещение «hdhfg» находится в строении <Link to="/">строение</Link>
+                                Помещение «{this.state.roomName}» находится в 
+                                строении <Link to={`/building/${this.state.selectedBuilding.id}`}>{this.state.selectedBuilding.name}</Link>
                             </Card.Body>
                         </Card>
                     </Col>
@@ -130,47 +222,102 @@ export class RoomPage extends Component {
                     <Collapse in={this.state.isExtended}>
                         <Card bg="light" className="mb-3"> 
                             <Card.Body>
-                                <Card.Title>Редактирование помещения «Название помещения»</Card.Title>
+                                <Card.Title>Редактирование помещения «{this.state.roomName}»</Card.Title>
                                 <hr/>
-                                <Form>
-                                    <Form.Group as={Row} controlId="formPlaintextEmail">
-                                        <Form.Label column sm="4" className="text-right">
-                                            Строение
-                                        </Form.Label>
-                                        <Col sm="8">
-                                        <   Form.Control defaultValue="Строение" />
-                                        </Col>
-                                    </Form.Group>
-                                    <Form.Group as={Row} controlId="formPlaintextEmail">
-                                        <Form.Label column sm="4" className="text-right">
-                                            Название помещения
-                                        </Form.Label>
-                                        <Col sm="8">
-                                        <   Form.Control defaultValue="Помещение" />
-                                        </Col>
-                                    </Form.Group>
-                                    <Form.Group as={Row} controlId="formPlaintextEmail">
-                                        <Form.Label column sm="4" className="text-right">
-                                            Примечание
-                                        </Form.Label>
-                                        <Col sm="8">
-                                        <   Form.Control as="textarea" rows="3" defaultValue="Примечание" />
-                                        </Col>
-                                    </Form.Group>
+                                {this.state.addedSuccessfully &&
+                                    <Alert variant="success" onClose={() => this.setState({updatedSuccessfully: false})} dismissible>
+                                        Данные обновлены успешно!
+                                    </Alert>
+                                }
+                                <Formik
+                                    enableReinitialize={true}
+                                    validationSchema={this.roomSchema}
+                                    onSubmit={(values, actions) => {
+                                        this.onRoomUpdate(values);
+                                    }}
+                                    initialValues={{
+                                        roomName: this.state.roomName,
+                                        description: (this.state.room && this.state.room.description) || "",
+                                    }}
+                                >
+                                    {({
+                                        handleSubmit,
+                                        handleChange,
+                                        handleBlur,
+                                        values,
+                                        touched,
+                                        isValid,
+                                        errors,
+                                        resetForm,
+                                    }) => (
+                                        <Form noValidate onSubmit={handleSubmit}>
+                                            <Form.Group as={Row} controlId="formPlaintextEmail">
+                                                <Form.Label column sm="4" className="text-right">
+                                                    Строение
+                                                </Form.Label>
+                                                <Col sm="8">
+                                                    {/*<Form.Control defaultValue="Строение" />*/}
+                                                    <Typeahead
+                                                        labelKey="name"
+                                                        options={this.state.options}
+                                                        placeholder="Выберите строение"
+                                                        onChange={this.onTypeaheadValueChange}
+                                                    />
+                                                </Col>
+                                            </Form.Group>
+                                            <Form.Group as={Row} controlId="formPlaintextEmail">
+                                                <Form.Label column sm="4" className="text-right">
+                                                    Название помещения
+                                                </Form.Label>
+                                                <Col sm="8">
+                                                    <Form.Control  
+                                                        placeholder = "Название помещения"
+                                                        type = "text"
+                                                        name = "roomName"
+                                                        value={values.roomName}
+                                                        onChange={handleChange}
+                                                        isValid={touched.roomName && !errors.roomName}
+                                                        isInvalid={!!errors.roomName}
+                                                    />
+                                                    <Form.Control.Feedback type="invalid">
+                                                        {errors.password}
+                                                    </Form.Control.Feedback>
+                                                </Col>
+                                            </Form.Group>
+                                            <Form.Group as={Row}>
+                                                <Form.Label column sm="4" className="text-right">
+                                                    Примечание
+                                                </Form.Label>
+                                                <Col sm="8">
+                                                    <Form.Control as="textarea" rows="3"
+                                                        placeholder = "Примечание"
+                                                        name = "description"
+                                                        value={values.description}
+                                                        onChange={handleChange}
+                                                        isValid={touched.description && !errors.description}
+                                                        isInvalid={!!errors.description}
+                                                    />
+                                                    <Form.Control.Feedback type="invalid">
+                                                        {errors.password}
+                                                    </Form.Control.Feedback>
+                                                </Col>
+                                            </Form.Group>
 
-                                    <Row className="text-right">
-                                        <Col xs={0} sm={4}>
-                                        </Col>
-                                        <Col xs={12} sm={8} className="text-left">
-                                            <Button variant="success" type="submit" className="mr-2">
-                                                Сохранить
-                                            </Button>
-                                            <Button variant="light" type="submit">
-                                                Отмена
-                                            </Button>
-                                        </Col>
-                                    </Row>
-                                </Form>
+                                            <Row className="text-right">
+                                                <Col xs={0} sm={4}>
+                                                </Col>
+                                                <Col xs={12} sm={8} className="text-left">
+                                                    <Button variant="success" type="submit" className="mr-2">
+                                                        Сохранить
+                                                    </Button>
+                                                    <Button variant="light" onClick={() => {this.setState({isExtended: false}); resetForm()}}>
+                                                        Отмена
+                                                    </Button>
+                                                </Col>
+                                            </Row>
+                                        </Form>
+                                    )}
+                                </Formik>
                             </Card.Body>
                         </Card>
                 </Collapse>

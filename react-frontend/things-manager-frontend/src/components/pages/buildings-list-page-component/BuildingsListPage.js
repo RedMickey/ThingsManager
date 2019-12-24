@@ -257,8 +257,8 @@ export class BuildingsListPage extends Component {
                         <tr>
                             <th>Строение</th>
                             <th>Вещей</th>
-                            <th>Мест хранения</th>
                             <th>Помещений</th>
+                            <th>Мест хранения</th>
                             <th>Cоздано</th>
                         </tr>
                     </thead>

@@ -17,10 +17,6 @@ import {
     Alert
 } from 'react-bootstrap';
 
-import { Typeahead, AsyncTypeahead } from 'react-bootstrap-typeahead';
-import 'react-bootstrap-typeahead/css/Typeahead.css';
-import 'react-bootstrap-typeahead/css/Typeahead-bs4.css';
-
 import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { Formik } from 'formik';
@@ -29,6 +25,7 @@ import './RoomsListPage.css';
 import { getUsers } from '../../../selectors/userSelector';
 import { savePlace, getRoomStatistics, getPlacesByPlaceType } from '../../../api/placeService';
 import * as Moment from 'moment';
+import BuildingTypeahead from '../../page-components/building_typeahead/BuildingTypeahead';
 
 const mapStateToProps = state => ({
     users: getUsers(state),
@@ -46,17 +43,17 @@ export class RoomsListPage extends Component {
             addedSuccessfully: false,
             addingError: false,
             options: [],
-            selectedBuilding: undefined,
         };
 
+        this.typeaheadBuilding = undefined;
+
         this.roomSchema = Yup.object().shape({
-            buildingName: Yup.string(),
+            building: Yup.string(),
             roomName: Yup.string()
                 .required('Заполните это поле'),
             description: Yup.string(),
         });
 
-        this.onTypeaheadValueChange = this.onTypeaheadValueChange.bind(this);
         this.onRoomAdd = this.onRoomAdd.bind(this);
     }
 
@@ -81,11 +78,16 @@ export class RoomsListPage extends Component {
 
     onRoomAdd(values) {
         console.log(values);
+        if (!values.building.id) {
+            const selectedBuilding = this.state.options.find(building => building.name === values.building.name);
+            values.building.id = selectedBuilding && selectedBuilding.id;
+        }
+
         savePlace({
             placeName: values.roomName,
             description: values.description,
             idPlaceType: 2,
-            outerPlace: {idPlace: this.state.selectedBuilding.id},
+            outerPlace: {idPlace: values.building.id},
             idUser: this.props.users[0].userId,
         },
         this.props.users[0].token
@@ -101,20 +103,15 @@ export class RoomsListPage extends Component {
         });
     }
 
-    onTypeaheadValueChange(selectedOptions) {
-        this.setState({
-            selectedBuilding: selectedOptions[0]
-        });
-        console.log(selectedOptions);
-    }
-
     render() {
         return (
             <div>
                 <Breadcrumb className="mt-3 mb-2">
-                    <Breadcrumb.Item href="#"><span class="oi oi-home"></span></Breadcrumb.Item>
-                    <Breadcrumb.Item as={Link} to="/">
-                        {this.props.users[0].username}
+                    <Breadcrumb.Item>
+                        <Link to="/"><span class="oi oi-home"></span></Link>
+                    </Breadcrumb.Item>
+                    <Breadcrumb.Item>
+                        <Link to="/">{this.props.users[0].username}</Link>
                     </Breadcrumb.Item>
                     <Breadcrumb.Item active>Помещения</Breadcrumb.Item>
                 </Breadcrumb>
@@ -176,10 +173,16 @@ export class RoomsListPage extends Component {
                                         Помещение успешно добавлено
                                     </Alert>
                                 }
+                                {this.state.addingError &&
+                                    <Alert variant="danger" onClose={() => this.setState({addingError: false})} dismissible>
+                                        Ошибка при добавлении помещения
+                                    </Alert>
+                                }
                                 <Formik
                                     validationSchema={this.roomSchema}
                                     onSubmit={(values, actions) => {
                                         this.onRoomAdd(values);
+                                        this.typeaheadBuilding.getInstance().clear();
                                         actions.resetForm();
                                     }}
                                     initialValues={{
@@ -196,6 +199,7 @@ export class RoomsListPage extends Component {
                                         isValid,
                                         errors,
                                         resetForm,
+                                        setFieldValue,
                                     }) => (
                                         <Form noValidate onSubmit={handleSubmit}>
                                             <Form.Group as={Row} controlId="formPlaintextEmail">
@@ -203,12 +207,10 @@ export class RoomsListPage extends Component {
                                                     Строение
                                                 </Form.Label>
                                                 <Col sm="8">
-                                                    {/*<Form.Control defaultValue="Строение" />*/}
-                                                    <Typeahead
-                                                        labelKey="name"
+                                                    <BuildingTypeahead 
                                                         options={this.state.options}
-                                                        placeholder="Выберите строение"
-                                                        onChange={this.onTypeaheadValueChange}
+                                                        setFieldValue={setFieldValue}
+                                                        getReference={(typeahead) => this.typeaheadBuilding = typeahead}
                                                     />
                                                 </Col>
                                             </Form.Group>

@@ -29,6 +29,7 @@ import { getUsers } from '../../../selectors/userSelector';
 import { DeletionErrorModal } from '../../page-components/deletion_error_modal/DeletionErrorModal';
 import { getRoomDataById, savePlace, deletePlaceById, getPlacesByPlaceType } from '../../../api/placeService';
 import * as Moment from 'moment';
+import BuildingTypeahead from '../../page-components/building_typeahead/BuildingTypeahead';
 
 const mapStateToProps = state => ({
     users: getUsers(state),
@@ -43,7 +44,7 @@ export class RoomPage extends Component {
             isExtended: false,
             spaceCount: undefined,
             thingCount: undefined,
-            selectedBuilding: {},
+            selectedBuilding: undefined,
             roomName: "",
             room: undefined,
             creationTimestamp: undefined,
@@ -55,14 +56,16 @@ export class RoomPage extends Component {
             options: [],
         };
 
+        this.typeaheadBuilding = undefined;
+
         this.roomSchema = Yup.object().shape({
-            buildingName: Yup.string(),
+            building: Yup.string(),
             roomName: Yup.string()
                 .required('Заполните это поле'),
             description: Yup.string(),
         });
 
-        this.onTypeaheadValueChange = this.onTypeaheadValueChange.bind(this);
+        this.onDeleteBuilding = this.onDeleteBuilding.bind(this);
     }
 
     componentDidMount() {
@@ -94,18 +97,11 @@ export class RoomPage extends Component {
             });
     }
 
-    onTypeaheadValueChange(selectedOptions) {
-        this.setState({
-            selectedBuilding: selectedOptions[0]
-        });
-        console.log(selectedOptions);
-    }
-
     onRoomUpdate(values) {
         console.log(values);
         
-        let updatedPlace = Object.assign(this.state.building);
-        updatedPlace.outerPlace = {idPlace: this.state.selectedBuilding.id};
+        let updatedPlace = Object.assign(this.state.room);
+        updatedPlace.outerPlace = {idPlace: values.building.id};
         updatedPlace.placeName = values.roomName;
         updatedPlace.description = values.description;
 
@@ -119,9 +115,11 @@ export class RoomPage extends Component {
                 updatedSuccessfully: true,
                 room: savedRoom,
                 roomName: savedRoom.placeName,
+                buildingName: savedRoom.outerPlace.placeName,
                 creationTimestamp: savedRoom.creationTimestamp,
                 updateTimestamp: savedRoom.updateTimestamp,
                 status: savedRoom.itemStatus.statusName,
+                selectedBuilding: {id: savedRoom.outerPlace.idPlace, name: savedRoom.outerPlace.placeName},
             });
         })
         .catch(err => {
@@ -130,20 +128,41 @@ export class RoomPage extends Component {
         });
     }
 
+    onDeleteBuilding() {
+        console.log(this);
+        if (this.state.spaceCount > 0 || this.state.thingCount > 0) {
+            const errorMessage = `Невозможно удалить строение т.к. в нем находится ` + 
+                `${this.state.spaceCount} мест хранения и ${this.state.thingCount} вещей.`
+            this.setState({
+                isShownDeletionErrorModal: true,
+                deletionErrorMessage: errorMessage,
+            });
+            return;
+        }
+        deletePlaceById(this.state.room.idPlace, this.props.users[0].token)
+            .then(() => {
+                this.props.history.push("/rooms");
+            });
+    }
+
     render() {
         return (
             <div>
                 <Breadcrumb className="mt-3 mb-2">
-                    <Breadcrumb.Item href="#"><span class="oi oi-home"></span></Breadcrumb.Item>
-                    <Breadcrumb.Item as={Link} to="/">
-                        {this.props.users[0].username}
+                    <Breadcrumb.Item>
+                        <Link to="/"><span class="oi oi-home"></span></Link>
                     </Breadcrumb.Item>
-                    <Breadcrumb.Item as={Link} to="/thingsList">Помещения</Breadcrumb.Item>
+                    <Breadcrumb.Item>
+                        <Link to="/">{this.props.users[0].username}</Link>
+                    </Breadcrumb.Item>
+                    <Breadcrumb.Item>
+                        <Link to="/rooms">Помещения</Link>
+                    </Breadcrumb.Item>
                     <Breadcrumb.Item active>{this.state.roomName}</Breadcrumb.Item>
                 </Breadcrumb>
                 <Row>
                     <Col>
-                        <h1 className="px-3 theme-header">{this.state.thingName}</h1>
+                        <h1 className="px-3 theme-header">{this.state.roomName}</h1>
                     </Col>
                 </Row>
 
@@ -195,7 +214,7 @@ export class RoomPage extends Component {
                         <Card bg="light" className="mt-3 mt-md-0"> 
                             <Card.Body>
                                 Помещение «{this.state.roomName}» находится в 
-                                строении <Link to={`/building/${this.state.selectedBuilding.id}`}>{this.state.selectedBuilding.name}</Link>
+                                строении {this.state.selectedBuilding && <Link to={`/building/${this.state.selectedBuilding.id}`}>{this.state.selectedBuilding.name}</Link>}
                             </Card.Body>
                         </Card>
                     </Col>
@@ -214,7 +233,7 @@ export class RoomPage extends Component {
                         <Button variant="secondary" className="mb-2">Отсутствует</Button>
                     </Col>
                     <Col xs={4} className="text-right">
-                        <Button variant="danger" className="mb-2">
+                        <Button variant="danger" className="mb-2" onClick={this.onDeleteBuilding}>
                             <span class="oi oi-trash"></span> Удалить
                         </Button>
                     </Col>
@@ -233,6 +252,9 @@ export class RoomPage extends Component {
                                     enableReinitialize={true}
                                     validationSchema={this.roomSchema}
                                     onSubmit={(values, actions) => {
+                                        if (!values.building) {
+                                            values.building = this.state.selectedBuilding;
+                                        }
                                         this.onRoomUpdate(values);
                                     }}
                                     initialValues={{
@@ -249,6 +271,7 @@ export class RoomPage extends Component {
                                         isValid,
                                         errors,
                                         resetForm,
+                                        setFieldValue,
                                     }) => (
                                         <Form noValidate onSubmit={handleSubmit}>
                                             <Form.Group as={Row} controlId="formPlaintextEmail">
@@ -256,12 +279,10 @@ export class RoomPage extends Component {
                                                     Строение
                                                 </Form.Label>
                                                 <Col sm="8">
-                                                    {/*<Form.Control defaultValue="Строение" />*/}
-                                                    <Typeahead
-                                                        labelKey="name"
+                                                    <BuildingTypeahead 
                                                         options={this.state.options}
-                                                        placeholder="Выберите строение"
-                                                        onChange={this.onTypeaheadValueChange}
+                                                        setFieldValue={setFieldValue}
+                                                        getReference={(typeahead) => this.typeaheadBuilding = typeahead}
                                                     />
                                                 </Col>
                                             </Form.Group>

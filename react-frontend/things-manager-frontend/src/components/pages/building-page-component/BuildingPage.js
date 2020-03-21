@@ -129,11 +129,13 @@ export class BuildingPage extends Component {
         return (
             <div>
                 <Breadcrumb className="mt-3 mb-2">
-                    <Breadcrumb.Item href="#"><span class="oi oi-home"></span></Breadcrumb.Item>
-                    <Breadcrumb.Item as={Link} to="/">
-                        {this.props.users[0].username}
+                    <Breadcrumb.Item>
+                        <Link to="/"><span class="oi oi-home"></span></Link>
                     </Breadcrumb.Item>
-                    <Breadcrumb.Item as={Link} to="/thingsList">Строения</Breadcrumb.Item>
+                    <Breadcrumb.Item>
+                        <Link to="/">{this.props.users[0].username}</Link>
+                    </Breadcrumb.Item>
+                    <Breadcrumb.Item><Link to="/buildings">Строения</Link></Breadcrumb.Item>
                     <Breadcrumb.Item active>{this.state.buildingName}</Breadcrumb.Item>
                 </Breadcrumb>
                 <Row>

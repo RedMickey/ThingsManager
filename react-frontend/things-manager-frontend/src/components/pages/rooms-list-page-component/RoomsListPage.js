@@ -42,7 +42,7 @@ export class RoomsListPage extends Component {
             roomStatistics: [],
             addedSuccessfully: false,
             addingError: false,
-            options: [],
+            buildingOptions: [],
         };
 
         this.typeaheadBuilding = undefined;
@@ -63,7 +63,7 @@ export class RoomsListPage extends Component {
         getPlacesByPlaceType(1 ,this.props.users[0].userId, this.props.users[0].token)
             .then((buildings) => {
                 this.setState({
-                    options: buildings.map(building => ({id: building.idPlace, name: building.placeName}))
+                    buildingOptions: buildings.map(building => ({id: building.idPlace, name: building.placeName}))
                 });
             });
     }
@@ -79,7 +79,7 @@ export class RoomsListPage extends Component {
     onRoomAdd(values) {
         console.log(values);
         if (!values.building.id) {
-            const selectedBuilding = this.state.options.find(building => building.name === values.building.name);
+            const selectedBuilding = this.state.buildingOptions.find(building => building.name === values.building.name);
             values.building.id = selectedBuilding && selectedBuilding.id;
         }
 
@@ -208,7 +208,7 @@ export class RoomsListPage extends Component {
                                                 </Form.Label>
                                                 <Col sm="8">
                                                     <BuildingTypeahead 
-                                                        options={this.state.options}
+                                                        options={this.state.buildingOptions}
                                                         setFieldValue={setFieldValue}
                                                         getReference={(typeahead) => this.typeaheadBuilding = typeahead}
                                                     />

@@ -42,6 +42,19 @@ export function deletePlaceById(placeId, token) {
     .then(handleJsonResponse);
 }
 
+export function getPlacesByOuterPlaceId(outerPlaceId, userId, token) {
+    return fetch(BACKEND_CONFIG.serverURL + "/place/getPlacesByOuterPlaceId", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json;charset=utf-8",
+            "Authorization": `Bearer ${token}`,
+        },
+        mode: "cors",
+        body: JSON.stringify({userId, outerPlaceId}),
+    })
+    .then(handleJsonResponse);
+}
+
 /*******************************************************Building************************************************************/
 
 export function getBuildingStatistics(userId, token) {

@@ -17,18 +17,22 @@ import {
     Alert
 } from 'react-bootstrap';
 
-import { Typeahead, AsyncTypeahead } from 'react-bootstrap-typeahead';
-import 'react-bootstrap-typeahead/css/Typeahead.css';
-import 'react-bootstrap-typeahead/css/Typeahead-bs4.css';
-
 import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
+import * as Moment from 'moment';
 import './SpacesListPage.css';
 import { getUsers } from '../../../selectors/userSelector';
-import { savePlace, getSpaceStatistics, getPlacesByPlaceType } from '../../../api/placeService';
-import * as Moment from 'moment';
+import { 
+    savePlace, 
+    getSpaceStatistics, 
+    getPlacesByPlaceType,
+    getPlacesByOuterPlaceId
+} from '../../../api/placeService';
+import SpaceHelper from '../../../componentHelpers/spaceCompHelpers/spaceHelper';
+import BuildingTypeahead from '../../page-components/building_typeahead/BuildingTypeahead';
+import RoomTypeahead from '../../page-components/room_typeahead/RoomTypeahead';
 
 const mapStateToProps = state => ({
     users: getUsers(state),
@@ -45,12 +49,16 @@ export class SpacesListPage extends Component {
             spaceStatistics: [],
             addedSuccessfully: false,
             addingError: false,
-            options: [],
-            selectedBuilding: undefined,
+            buildingOptions: [],
+            roomOptions: [],
         };
 
+        this.typeaheadBuilding = undefined;
+        this.typeaheadRoom = undefined;
+
         this.spaceSchema = Yup.object().shape({
-            buildingName: Yup.string(),
+            building: Yup.string(),
+            room: Yup.string(),
             roomName: Yup.string(),
             spaceName: Yup.string()
                 .required('Заполните это поле'),
@@ -58,17 +66,25 @@ export class SpacesListPage extends Component {
         });
 
         this.onSpaceAdd = this.onSpaceAdd.bind(this);
+        this.setSelectedBuilding = this.setSelectedBuilding.bind(this);
     }
 
     componentDidMount() {
         this.downloadSpaceStatistics();
 
-        /*getPlacesByPlaceType(1 ,this.props.users[0].userId, this.props.users[0].token)
+        getPlacesByPlaceType(1 ,this.props.users[0].userId, this.props.users[0].token)
             .then((buildings) => {
                 this.setState({
-                    options: buildings.map(building => ({id: building.idPlace, name: building.placeName}))
+                    buildingOptions: buildings.map(building => ({id: building.idPlace, name: building.placeName}))
                 });
-            });*/
+            });
+
+        getPlacesByPlaceType(2 ,this.props.users[0].userId, this.props.users[0].token)
+            .then((rooms) => {
+                this.setState({
+                    roomOptions: rooms.map(room => ({id: room.idPlace, name: room.placeName}))
+                });
+            });
     }
 
     downloadSpaceStatistics() {
@@ -81,24 +97,63 @@ export class SpacesListPage extends Component {
 
     onSpaceAdd(values) {
         console.log(values);
+
+        if (!values.building || !values.room) {
+            this.setState({addingError: true});
+            return;
+        }
+
+        values.building.id = SpaceHelper.tryToFindPlaceIdInTypeaheadOptions(values.building, "buildingOptions");
+        values.room.id = SpaceHelper.tryToFindPlaceIdInTypeaheadOptions(values.room, "roomOptions");
+
         savePlace({
-            placeName: values.roomName,
+            placeName: values.spaceName,
             description: values.description,
-            idPlaceType: 2,
-            outerPlace: {idPlace: this.state.selectedBuilding.id},
+            idPlaceType: 3,
+            outerPlace: {idPlace: values.room.id},
             idUser: this.props.users[0].userId,
-        },
-        this.props.users[0].token
+            },
+            this.props.users[0].token
         )
-        .then(savedRoom => {
-            console.log(savedRoom);
+        .then(savedSpace => {
+            console.log(savedSpace);
             this.setState({addedSuccessfully: true});
-            this.downloadRoomStatistics();
+            this.downloadSpaceStatistics();
         })
         .catch(err => {
             console.log(err);
             this.setState({addingError: true});
         });
+    }
+
+    setSelectedBuilding(setFieldValueFunc, propertyName, newValue) {
+        newValue.id = SpaceHelper.tryToFindPlaceIdInTypeaheadOptions(newValue, "buildingOptions");
+        if (!newValue.id) {
+            this.setState({
+                roomOptions: []
+            });
+            setFieldValueFunc(propertyName, {id: undefined, name: ""});
+            return;
+        }
+
+        getPlacesByOuterPlaceId(newValue.id ,this.props.users[0].userId, this.props.users[0].token)
+            .then((rooms) => {
+                this.setState({
+                    roomOptions: rooms.map(room => ({id: room.idPlace, name: room.placeName}))
+                });
+            })
+            .then(() => {
+                setFieldValueFunc(propertyName, newValue);
+            });
+    }
+
+    setSelectedRoom(setFieldValueFunc, propertyName, newValue) {
+        newValue.id = SpaceHelper.tryToFindPlaceIdInTypeaheadOptions(newValue, "roomOptions");
+        if (!newValue.id) {
+            setFieldValueFunc(propertyName, {id: undefined, name: ""});
+            return;
+        }
+        setFieldValueFunc(propertyName, newValue);
     }
 
     render() {
@@ -169,10 +224,18 @@ export class SpacesListPage extends Component {
                                         Помещение успешно добавлено
                                     </Alert>
                                 }
+                                {this.state.addingError &&
+                                    <Alert variant="danger" onClose={() => this.setState({addingError: false})} dismissible>
+                                        Ошибка при добавлении помещения
+                                    </Alert>
+                                }
                                 <Formik
                                     validationSchema={this.spaceSchema}
                                     onSubmit={(values, actions) => {
-                                        //this.onRoomAdd(values);
+                                        this.onSpaceAdd(values);
+                                        actions.resetForm();
+                                        this.typeaheadBuilding.getInstance().clear();
+                                        this.typeaheadRoom.getInstance().clear();
                                         actions.resetForm();
                                     }}
                                     initialValues={{
@@ -189,6 +252,7 @@ export class SpacesListPage extends Component {
                                         isValid,
                                         errors,
                                         resetForm,
+                                        setFieldValue,
                                     }) => (
                                         <Form noValidate onSubmit={handleSubmit}>
                                             <Form.Group as={Row} controlId="formPlaintextEmail">
@@ -196,12 +260,10 @@ export class SpacesListPage extends Component {
                                                     Строение
                                                 </Form.Label>
                                                 <Col sm="8">
-                                                    {/*<Form.Control defaultValue="Строение" />*/}
-                                                    <Typeahead
-                                                        labelKey="buildingTypeahead"
-                                                        options={this.state.options}
-                                                        placeholder="Выберите строение"
-                                                        onChange={this.onTypeaheadValueChange}
+                                                    <BuildingTypeahead 
+                                                        options={this.state.buildingOptions}
+                                                        setFieldValue={this.setSelectedBuilding.bind(this, setFieldValue)}
+                                                        getReference={(typeahead) => this.typeaheadBuilding = typeahead}
                                                     />
                                                 </Col>
                                             </Form.Group>
@@ -210,12 +272,10 @@ export class SpacesListPage extends Component {
                                                     Помещение
                                                 </Form.Label>
                                                 <Col sm="8">
-                                                    {/*<Form.Control defaultValue="Помещение" />*/}
-                                                    <Typeahead
-                                                        labelKey="roomTypeahead"
-                                                        options={this.state.options}
-                                                        placeholder="Выберите строение"
-                                                        onChange={this.onTypeaheadValueChange}
+                                                    <RoomTypeahead 
+                                                        options={this.state.roomOptions}
+                                                        setFieldValue={this.setSelectedRoom.bind(this, setFieldValue)}
+                                                        getReference={(typeahead) => this.typeaheadRoom = typeahead}
                                                     />
                                                 </Col>
                                             </Form.Group>

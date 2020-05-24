@@ -26,3 +26,16 @@ export function getItemById(itemId, userId, token) {
     })
     .then(handleJsonResponse);
 }
+
+export function saveItem(item, token) {
+    return fetch(BACKEND_CONFIG.serverURL + "/item/saveItem", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json;charset=utf-8",
+            "Authorization": `Bearer ${token}`,
+        },
+        mode: "cors",
+        body: JSON.stringify(item),
+    })
+    .then(handleJsonResponse);
+}

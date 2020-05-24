@@ -38,7 +38,7 @@ import {
 } from '../../../api/placeService';
 import BuildingTypeahead from '../../page-components/typeaheads/building_typeahead/BuildingTypeahead';
 import RoomTypeahead from '../../page-components/typeaheads/room_typeahead/RoomTypeahead';
-import SpaceHelper from '../../../componentHelpers/spaceCompHelpers/spaceHelper';
+import TypeaheadHelper from '../../../componentHelpers/typeaheadHelpers/TypeaheadHelper';
 
 const mapStateToProps = state => ({
     users: getUsers(state),
@@ -126,8 +126,8 @@ export class SpacePage extends Component {
             return;
         }
 
-        values.building.id = SpaceHelper.tryToFindPlaceIdInTypeaheadOptions(values.building, "buildingOptions");
-        values.room.id = SpaceHelper.tryToFindPlaceIdInTypeaheadOptions(values.room, "roomOptions");
+        values.building.id = TypeaheadHelper.tryToFindItemIdInTypeaheadOptions(values.building, "buildingOptions");
+        values.room.id = TypeaheadHelper.tryToFindItemIdInTypeaheadOptions(values.room, "roomOptions");
 
         let updatedPlace = Object.assign(this.state.space);
         updatedPlace.outerPlace = {
@@ -169,7 +169,7 @@ export class SpacePage extends Component {
     }
 
     setSelectedBuilding(setFieldValueFunc, propertyName, newValue) {
-        newValue.id = SpaceHelper.tryToFindPlaceIdInTypeaheadOptions(newValue, "buildingOptions");
+        newValue.id = TypeaheadHelper.tryToFindItemIdInTypeaheadOptions(newValue, "buildingOptions");
         if (!newValue.id) {
             this.setState({
                 roomOptions: []
@@ -190,7 +190,7 @@ export class SpacePage extends Component {
     }
 
     setSelectedRoom(setFieldValueFunc, propertyName, newValue) {
-        newValue.id = SpaceHelper.tryToFindPlaceIdInTypeaheadOptions(newValue, "roomOptions");
+        newValue.id = TypeaheadHelper.tryToFindItemIdInTypeaheadOptions(newValue, "roomOptions");
         if (!newValue.id) {
             setFieldValueFunc(propertyName, {id: undefined, name: ""});
             return;

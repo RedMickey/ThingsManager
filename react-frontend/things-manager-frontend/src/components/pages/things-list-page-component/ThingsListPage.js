@@ -21,7 +21,7 @@ import { connect } from 'react-redux';
 import { Formik } from 'formik';
 import './ThingsListPage.css';
 import { getUsers } from '../../../selectors/userSelector';
-import { getAllItemsByUserId } from '../../../api/thingService';
+import { getAllItemsByUserId, saveItem } from '../../../api/thingService';
 import { getCategories } from '../../../api/categoryService';
 import { 
     getPlacesByPlaceType,
@@ -29,7 +29,7 @@ import {
 } from '../../../api/placeService';
 import * as Moment from 'moment';
 import * as Yup from 'yup';
-import SpaceHelper from '../../../componentHelpers/spaceCompHelpers/spaceHelper';
+import TypeaheadHelper from '../../../componentHelpers/typeaheadHelpers/TypeaheadHelper';
 import BuildingTypeahead from '../../page-components/typeaheads/building_typeahead/BuildingTypeahead';
 import RoomTypeahead from '../../page-components/typeaheads/room_typeahead/RoomTypeahead';
 import SpaceTypeahead from '../../page-components/typeaheads/space_typeahead/SpaceTypeahead';
@@ -126,10 +126,60 @@ export class ThingsListPage extends Component {
 
     onThingAdd(values) {
         console.log(values);
+
+        if (!values.building || !values.room || !values.space) {
+            this.setState({addingError: true});
+            return;
+        }
+
+        values.building.id = TypeaheadHelper.tryToFindItemIdInTypeaheadOptions(values.building, "buildingOptions", this);
+        values.room.id = TypeaheadHelper.tryToFindItemIdInTypeaheadOptions(values.room, "roomOptions", this);
+        values.space.id = TypeaheadHelper.tryToFindItemIdInTypeaheadOptions(values.space, "spaceOptions", this);
+
+        let category;
+        try {
+            const categoryId = TypeaheadHelper.tryToFindItemIdInTypeaheadOptions(values.category, "categoryOptions", this);
+            category = {
+                idCategory: categoryId,
+            };
+        } catch(err) {
+            // Do nothing
+        }
+
+        saveItem(
+            {
+                idUser: this.props.users[0].userId,
+                itemName: values.thingName,
+                category,
+                place: {
+                    idPlace: values.space.id,
+                    outerPlace: {
+                        idPlace: values.room.id,
+                        outerPlace: {
+                            idPlace: values.building.id,
+                        },
+                    },
+                },
+                itemStatus: {
+                    idStatus: 1,
+                },
+                description: values.description,
+            },
+            this.props.users[0].token
+        )
+        .then(savedSpace => {
+            console.log(savedSpace);
+            this.setState({addedSuccessfully: true});
+            this.downloadItems();
+        })
+        .catch(err => {
+            console.log(err);
+            this.setState({addingError: true});
+        });
     }
 
     setSelectedBuilding(setFieldValueFunc, propertyName, newValue) {
-        newValue.id = SpaceHelper.tryToFindPlaceIdInTypeaheadOptions(newValue, "buildingOptions", this);
+        newValue.id = TypeaheadHelper.tryToFindItemIdInTypeaheadOptions(newValue, "buildingOptions", this);
         if (!newValue.id) {
             this.setState({
                 roomOptions: []
@@ -150,7 +200,7 @@ export class ThingsListPage extends Component {
     }
 
     setSelectedRoom(setFieldValueFunc, propertyName, newValue) {
-        newValue.id = SpaceHelper.tryToFindPlaceIdInTypeaheadOptions(newValue, "roomOptions", this);
+        newValue.id = TypeaheadHelper.tryToFindItemIdInTypeaheadOptions(newValue, "roomOptions", this);
         if (!newValue.id) {
             this.setState({
                 spaceOptions: []
@@ -171,7 +221,7 @@ export class ThingsListPage extends Component {
     }
 
     setSelectedSpace(setFieldValueFunc, propertyName, newValue) {
-        newValue.id = SpaceHelper.tryToFindPlaceIdInTypeaheadOptions(newValue, "spaceOptions", this);
+        newValue.id = TypeaheadHelper.tryToFindItemIdInTypeaheadOptions(newValue, "spaceOptions", this);
         if (!newValue.id) {
             setFieldValueFunc(propertyName, {id: undefined, name: ""});
             return;
@@ -180,7 +230,7 @@ export class ThingsListPage extends Component {
     }
 
     setSelectedCategory(setFieldValueFunc, propertyName, newValue) {
-        newValue.id = SpaceHelper.tryToFindPlaceIdInTypeaheadOptions(newValue, "categoryOptions", this);
+        newValue.id = TypeaheadHelper.tryToFindItemIdInTypeaheadOptions(newValue, "categoryOptions", this);
         if (!newValue.id) {
             setFieldValueFunc(propertyName, {id: undefined, name: ""});
             return;
@@ -253,12 +303,12 @@ export class ThingsListPage extends Component {
                                 <Card.Title>Добавление новой вещи</Card.Title>
                                 {this.state.addedSuccessfully &&
                                     <Alert variant="success" onClose={() => this.setState({addedSuccessfully: false})} dismissible>
-                                        Помещение успешно добавлено
+                                        Вещь успешно добавлено
                                     </Alert>
                                 }
                                 {this.state.addingError &&
                                     <Alert variant="danger" onClose={() => this.setState({addingError: false})} dismissible>
-                                        Ошибка при добавлении помещения
+                                        Ошибка при добавлении вещи
                                     </Alert>
                                 }
                                 <Formik

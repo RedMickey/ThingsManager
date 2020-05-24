@@ -30,7 +30,7 @@ import {
     getPlacesByPlaceType,
     getPlacesByOuterPlaceId
 } from '../../../api/placeService';
-import SpaceHelper from '../../../componentHelpers/spaceCompHelpers/spaceHelper';
+import TypeaheadHelper from '../../../componentHelpers/typeaheadHelpers/TypeaheadHelper';
 import BuildingTypeahead from '../../page-components/typeaheads/building_typeahead/BuildingTypeahead';
 import RoomTypeahead from '../../page-components/typeaheads/room_typeahead/RoomTypeahead';
 
@@ -102,8 +102,8 @@ export class SpacesListPage extends Component {
             return;
         }
 
-        values.building.id = SpaceHelper.tryToFindPlaceIdInTypeaheadOptions(values.building, "buildingOptions", this);
-        values.room.id = SpaceHelper.tryToFindPlaceIdInTypeaheadOptions(values.room, "roomOptions", this);
+        values.building.id = TypeaheadHelper.tryToFindItemIdInTypeaheadOptions(values.building, "buildingOptions", this);
+        values.room.id = TypeaheadHelper.tryToFindItemIdInTypeaheadOptions(values.room, "roomOptions", this);
 
         savePlace({
             placeName: values.spaceName,
@@ -126,7 +126,7 @@ export class SpacesListPage extends Component {
     }
 
     setSelectedBuilding(setFieldValueFunc, propertyName, newValue) {
-        newValue.id = SpaceHelper.tryToFindPlaceIdInTypeaheadOptions(newValue, "buildingOptions", this);
+        newValue.id = TypeaheadHelper.tryToFindItemIdInTypeaheadOptions(newValue, "buildingOptions", this);
         if (!newValue.id) {
             this.setState({
                 roomOptions: []
@@ -147,7 +147,7 @@ export class SpacesListPage extends Component {
     }
 
     setSelectedRoom(setFieldValueFunc, propertyName, newValue) {
-        newValue.id = SpaceHelper.tryToFindPlaceIdInTypeaheadOptions(newValue, "roomOptions", this);
+        newValue.id = TypeaheadHelper.tryToFindItemIdInTypeaheadOptions(newValue, "roomOptions", this);
         if (!newValue.id) {
             setFieldValueFunc(propertyName, {id: undefined, name: ""});
             return;

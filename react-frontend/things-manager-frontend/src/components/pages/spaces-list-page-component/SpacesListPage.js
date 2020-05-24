@@ -31,8 +31,8 @@ import {
     getPlacesByOuterPlaceId
 } from '../../../api/placeService';
 import SpaceHelper from '../../../componentHelpers/spaceCompHelpers/spaceHelper';
-import BuildingTypeahead from '../../page-components/building_typeahead/BuildingTypeahead';
-import RoomTypeahead from '../../page-components/room_typeahead/RoomTypeahead';
+import BuildingTypeahead from '../../page-components/typeaheads/building_typeahead/BuildingTypeahead';
+import RoomTypeahead from '../../page-components/typeaheads/room_typeahead/RoomTypeahead';
 
 const mapStateToProps = state => ({
     users: getUsers(state),
@@ -59,7 +59,6 @@ export class SpacesListPage extends Component {
         this.spaceSchema = Yup.object().shape({
             building: Yup.string(),
             room: Yup.string(),
-            roomName: Yup.string(),
             spaceName: Yup.string()
                 .required('Заполните это поле'),
             description: Yup.string(),
@@ -103,8 +102,8 @@ export class SpacesListPage extends Component {
             return;
         }
 
-        values.building.id = SpaceHelper.tryToFindPlaceIdInTypeaheadOptions(values.building, "buildingOptions");
-        values.room.id = SpaceHelper.tryToFindPlaceIdInTypeaheadOptions(values.room, "roomOptions");
+        values.building.id = SpaceHelper.tryToFindPlaceIdInTypeaheadOptions(values.building, "buildingOptions", this);
+        values.room.id = SpaceHelper.tryToFindPlaceIdInTypeaheadOptions(values.room, "roomOptions", this);
 
         savePlace({
             placeName: values.spaceName,
@@ -127,7 +126,7 @@ export class SpacesListPage extends Component {
     }
 
     setSelectedBuilding(setFieldValueFunc, propertyName, newValue) {
-        newValue.id = SpaceHelper.tryToFindPlaceIdInTypeaheadOptions(newValue, "buildingOptions");
+        newValue.id = SpaceHelper.tryToFindPlaceIdInTypeaheadOptions(newValue, "buildingOptions", this);
         if (!newValue.id) {
             this.setState({
                 roomOptions: []
@@ -148,7 +147,7 @@ export class SpacesListPage extends Component {
     }
 
     setSelectedRoom(setFieldValueFunc, propertyName, newValue) {
-        newValue.id = SpaceHelper.tryToFindPlaceIdInTypeaheadOptions(newValue, "roomOptions");
+        newValue.id = SpaceHelper.tryToFindPlaceIdInTypeaheadOptions(newValue, "roomOptions", this);
         if (!newValue.id) {
             setFieldValueFunc(propertyName, {id: undefined, name: ""});
             return;

@@ -36,8 +36,8 @@ import {
     getPlacesByPlaceType,
     getPlacesByOuterPlaceId
 } from '../../../api/placeService';
-import BuildingTypeahead from '../../page-components/building_typeahead/BuildingTypeahead';
-import RoomTypeahead from '../../page-components/room_typeahead/RoomTypeahead';
+import BuildingTypeahead from '../../page-components/typeaheads/building_typeahead/BuildingTypeahead';
+import RoomTypeahead from '../../page-components/typeaheads/room_typeahead/RoomTypeahead';
 import SpaceHelper from '../../../componentHelpers/spaceCompHelpers/spaceHelper';
 
 const mapStateToProps = state => ({
@@ -69,7 +69,6 @@ export class SpacePage extends Component {
         this.spaceSchema = Yup.object().shape({
             building: Yup.string(),
             room: Yup.string(),
-            roomName: Yup.string(),
             spaceName: Yup.string()
                 .required('Заполните это поле'),
             description: Yup.string(),

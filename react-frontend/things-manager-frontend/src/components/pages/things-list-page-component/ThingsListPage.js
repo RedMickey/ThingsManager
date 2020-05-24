@@ -13,14 +13,27 @@ import {
     ButtonToolbar,
     Collapse,
     Card,
-    Table
+    Table,
+    Alert
 } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
+import { Formik } from 'formik';
 import './ThingsListPage.css';
 import { getUsers } from '../../../selectors/userSelector';
 import { getAllItemsByUserId } from '../../../api/thingService';
+import { getCategories } from '../../../api/categoryService';
+import { 
+    getPlacesByPlaceType,
+    getPlacesByOuterPlaceId
+} from '../../../api/placeService';
 import * as Moment from 'moment';
+import * as Yup from 'yup';
+import SpaceHelper from '../../../componentHelpers/spaceCompHelpers/spaceHelper';
+import BuildingTypeahead from '../../page-components/typeaheads/building_typeahead/BuildingTypeahead';
+import RoomTypeahead from '../../page-components/typeaheads/room_typeahead/RoomTypeahead';
+import SpaceTypeahead from '../../page-components/typeaheads/space_typeahead/SpaceTypeahead';
+import CategoryTypeahead from '../../page-components/typeaheads/category_typeahead/CategoryTypeahead';
 
 const mapStateToProps = state => ({
     users: getUsers(state),
@@ -35,11 +48,66 @@ export class ThingsListPage extends Component {
         this.state = {
             isExtended : false,
             thingsWithPlaces: [],
+            addedSuccessfully: false,
+            addingError: false,
+            buildingOptions: [],
+            roomOptions: [],
+            spaceOptions: [],
+            categoryOptions: [],
           };
+
+          this.typeaheadBuilding = undefined;
+          this.typeaheadRoom = undefined;
+          this.typeaheadSpace = undefined;
+          this.typeaheadCategory = undefined;
+
+          this.thingSchema = Yup.object().shape({
+            building: Yup.string(),
+            room: Yup.string(),
+            space: Yup.string(),
+            category: Yup.string(),
+            thingName: Yup.string()
+                .required('Заполните это поле'),
+            description: Yup.string(),
+        });
+
+        this.onThingAdd = this.onThingAdd.bind(this);
+
     }
 
     componentDidMount() {
+        this.downloadItems();
 
+        getPlacesByPlaceType(1 ,this.props.users[0].userId, this.props.users[0].token)
+            .then((buildings) => {
+                this.setState({
+                    buildingOptions: buildings.map(building => ({id: building.idPlace, name: building.placeName}))
+                });
+            });
+
+        getPlacesByPlaceType(2 ,this.props.users[0].userId, this.props.users[0].token)
+            .then((rooms) => {
+                this.setState({
+                    roomOptions: rooms.map(room => ({id: room.idPlace, name: room.placeName}))
+                });
+            });
+        
+        getPlacesByPlaceType(3 ,this.props.users[0].userId, this.props.users[0].token)
+            .then((spaces) => {
+                this.setState({
+                    spaceOptions: spaces.map(space => ({id: space.idPlace, name: space.placeName}))
+                });
+            });
+
+        getCategories(this.props.users[0].userId, this.props.users[0].token)
+            .then((categories) => {
+                this.setState({
+                    categoryOptions: categories.map(category => ({id: category.idCategory, name: category.categoryName}))
+                });
+            });
+    }
+
+    downloadItems() {
         getAllItemsByUserId(this.props.users[0].userId, this.props.users[0].token)
             .then(thingsWithPlaces => {
                 thingsWithPlaces.sort((t1, t2) => {
@@ -47,13 +115,77 @@ export class ThingsListPage extends Component {
                         return 1;
                     }
                     if (t1.item.itemName < t2.item.itemName) {
-                    return -1;
+                        return -1;
                     }
                     return 0;
                 });
                 this.setState({thingsWithPlaces});
                 console.log(this.state.thingsWithPlaces);
             });
+    }
+
+    onThingAdd(values) {
+        console.log(values);
+    }
+
+    setSelectedBuilding(setFieldValueFunc, propertyName, newValue) {
+        newValue.id = SpaceHelper.tryToFindPlaceIdInTypeaheadOptions(newValue, "buildingOptions", this);
+        if (!newValue.id) {
+            this.setState({
+                roomOptions: []
+            });
+            setFieldValueFunc(propertyName, {id: undefined, name: ""});
+            return;
+        }
+
+        getPlacesByOuterPlaceId(newValue.id ,this.props.users[0].userId, this.props.users[0].token)
+            .then((rooms) => {
+                this.setState({
+                    roomOptions: rooms.map(room => ({id: room.idPlace, name: room.placeName}))
+                });
+            })
+            .then(() => {
+                setFieldValueFunc(propertyName, newValue);
+            });
+    }
+
+    setSelectedRoom(setFieldValueFunc, propertyName, newValue) {
+        newValue.id = SpaceHelper.tryToFindPlaceIdInTypeaheadOptions(newValue, "roomOptions", this);
+        if (!newValue.id) {
+            this.setState({
+                spaceOptions: []
+            });
+            setFieldValueFunc(propertyName, {id: undefined, name: ""});
+            return;
+        }
+
+        getPlacesByOuterPlaceId(newValue.id ,this.props.users[0].userId, this.props.users[0].token)
+            .then((spaces) => {
+                this.setState({
+                    spaceOptions: spaces.map(space => ({id: space.idPlace, name: space.placeName}))
+                });
+            })
+            .then(() => {
+                setFieldValueFunc(propertyName, newValue);
+            });
+    }
+
+    setSelectedSpace(setFieldValueFunc, propertyName, newValue) {
+        newValue.id = SpaceHelper.tryToFindPlaceIdInTypeaheadOptions(newValue, "spaceOptions", this);
+        if (!newValue.id) {
+            setFieldValueFunc(propertyName, {id: undefined, name: ""});
+            return;
+        }
+        setFieldValueFunc(propertyName, newValue);
+    }
+
+    setSelectedCategory(setFieldValueFunc, propertyName, newValue) {
+        newValue.id = SpaceHelper.tryToFindPlaceIdInTypeaheadOptions(newValue, "categoryOptions", this);
+        if (!newValue.id) {
+            setFieldValueFunc(propertyName, {id: undefined, name: ""});
+            return;
+        }
+        setFieldValueFunc(propertyName, newValue);
     }
 
     render() {
@@ -119,69 +251,144 @@ export class ThingsListPage extends Component {
                     <Card bg="light" className="mb-3"> 
                             <Card.Body>
                                 <Card.Title>Добавление новой вещи</Card.Title>
-                                <Form>
-                                    <Form.Group as={Row} controlId="formPlaintextEmail">
-                                        <Form.Label column sm="4" className="text-right">
-                                            Строение
-                                        </Form.Label>
-                                        <Col sm="8">
-                                        <   Form.Control defaultValue="Строение" />
-                                        </Col>
-                                    </Form.Group>
-                                    <Form.Group as={Row} controlId="formPlaintextEmail">
-                                        <Form.Label column sm="4" className="text-right">
-                                            Помещение
-                                        </Form.Label>
-                                        <Col sm="8">
-                                        <   Form.Control defaultValue="Помещение" />
-                                        </Col>
-                                    </Form.Group>
-                                    <Form.Group as={Row} controlId="formPlaintextEmail">
-                                        <Form.Label column sm="4" className="text-right">
-                                            Место хранения
-                                        </Form.Label>
-                                        <Col sm="8">
-                                        <   Form.Control defaultValue="Место хранения" />
-                                        </Col>
-                                    </Form.Group>
-                                    <Form.Group as={Row} controlId="formPlaintextEmail">
-                                        <Form.Label column sm="4" className="text-right">
-                                            Категория
-                                        </Form.Label>
-                                        <Col sm="8">
-                                        <   Form.Control defaultValue="Категория" />
-                                        </Col>
-                                    </Form.Group>
-                                    <Form.Group as={Row} controlId="formPlaintextEmail">
-                                        <Form.Label column sm="4" className="text-right">
-                                            Название вещи
-                                        </Form.Label>
-                                        <Col sm="8">
-                                        <   Form.Control defaultValue="Название вещи" />
-                                        </Col>
-                                    </Form.Group>
-                                    <Form.Group as={Row} controlId="formPlaintextEmail">
-                                        <Form.Label column sm="4" className="text-right">
-                                            Примечание
-                                        </Form.Label>
-                                        <Col sm="8">
-                                        <   Form.Control as="textarea" rows="3" defaultValue="Примечание" />
-                                        </Col>
-                                    </Form.Group>
-
-                                    <Row className="text-right">
-                                        <Col xs={0} sm={4}>
-                                        </Col>
-                                        <Col xs={12} sm={8} className="text-left">
-                                            <Button variant="success" type="submit" className="mr-2">
-                                                Добавить
-                                            </Button>
-                                            <Button variant="light" type="submit">
-                                                Отмена
-                                            </Button>
-                                        </Col>
-                                    </Row>
-                                </Form>
+                                {this.state.addedSuccessfully &&
+                                    <Alert variant="success" onClose={() => this.setState({addedSuccessfully: false})} dismissible>
+                                        Помещение успешно добавлено
+                                    </Alert>
+                                }
+                                {this.state.addingError &&
+                                    <Alert variant="danger" onClose={() => this.setState({addingError: false})} dismissible>
+                                        Ошибка при добавлении помещения
+                                    </Alert>
+                                }
+                                <Formik
+                                    validationSchema={this.thingSchema}
+                                    onSubmit={(values, actions) => {
+                                        this.onThingAdd(values);
+                                        actions.resetForm();
+                                        this.typeaheadBuilding.getInstance().clear();
+                                        this.typeaheadRoom.getInstance().clear();
+                                        this.typeaheadSpace.getInstance().clear();
+                                        this.typeaheadCategory.getInstance().clear();
+                                        actions.resetForm();
+                                    }}
+                                    initialValues={{
+                                        thingName: "",
+                                        description: "",
+                                    }}
+                                >
+                                    {({
+                                        handleSubmit,
+                                        handleChange,
+                                        handleBlur,
+                                        values,
+                                        touched,
+                                        isValid,
+                                        errors,
+                                        resetForm,
+                                        setFieldValue,
+                                    }) => (
+                                        <Form noValidate onSubmit={handleSubmit}>
+                                            <Form.Group as={Row} controlId="formPlaintextEmail">
+                                                <Form.Label column sm="4" className="text-right">
+                                                    Строение
+                                                </Form.Label>
+                                                <Col sm="8">
+                                                    <BuildingTypeahead 
+                                                        options={this.state.buildingOptions}
+                                                        setFieldValue={this.setSelectedBuilding.bind(this, setFieldValue)}
+                                                        getReference={(typeahead) => this.typeaheadBuilding = typeahead}
+                                                    />
+                                                </Col>
+                                            </Form.Group>
+                                            <Form.Group as={Row} controlId="formPlaintextEmail">
+                                                <Form.Label column sm="4" className="text-right">
+                                                    Помещение
+                                                </Form.Label>
+                                                <Col sm="8">
+                                                    <RoomTypeahead 
+                                                        options={this.state.roomOptions}
+                                                        setFieldValue={this.setSelectedRoom.bind(this, setFieldValue)}
+                                                        getReference={(typeahead) => this.typeaheadRoom = typeahead}
+                                                    />
+                                                </Col>
+                                            </Form.Group>
+                                            <Form.Group as={Row} controlId="formPlaintextEmail">
+                                                <Form.Label column sm="4" className="text-right">
+                                                    Место хранения
+                                                </Form.Label>
+                                                <Col sm="8">
+                                                    <SpaceTypeahead 
+                                                        options={this.state.spaceOptions}
+                                                        setFieldValue={this.setSelectedSpace.bind(this, setFieldValue)}
+                                                        getReference={(typeahead) => this.typeaheadSpace = typeahead}
+                                                    />
+                                                </Col>
+                                            </Form.Group>
+                                            <Form.Group as={Row} controlId="formPlaintextEmail">
+                                                <Form.Label column sm="4" className="text-right">
+                                                    Категория
+                                                </Form.Label>
+                                                <Col sm="8">
+                                                    <CategoryTypeahead 
+                                                        options={this.state.categoryOptions}
+                                                        setFieldValue={this.setSelectedCategory.bind(this, setFieldValue)}
+                                                        getReference={(typeahead) => this.typeaheadCategory = typeahead}
+                                                    />
+                                                </Col>
+                                            </Form.Group>
+                                            <Form.Group as={Row} controlId="formPlaintextEmail">
+                                                <Form.Label column sm="4" className="text-right">
+                                                    Название вещи
+                                                </Form.Label>
+                                                <Col sm="8">
+                                                    <Form.Control
+                                                        placeholder = "Название вещи"
+                                                        type = "text"
+                                                        name = "thingName"
+                                                        value={values.thingName}
+                                                        onChange={handleChange}
+                                                        isValid={touched.thingName && !errors.thingName}
+                                                        isInvalid={!!errors.thingName}
+                                                    />
+                                                    <Form.Control.Feedback type="invalid">
+                                                        {errors.thingName}
+                                                    </Form.Control.Feedback>
+                                                </Col>
+                                            </Form.Group>
+                                            <Form.Group as={Row} controlId="formPlaintextEmail">
+                                                <Form.Label column sm="4" className="text-right">
+                                                    Примечание
+                                                </Form.Label>
+                                                <Col sm="8">
+                                                    <Form.Control as="textarea" rows="3"
+                                                        placeholder = "Примечание"
+                                                        name = "description"
+                                                        value={values.description}
+                                                        onChange={handleChange}
+                                                        isValid={touched.description && !errors.description}
+                                                        isInvalid={!!errors.description}
+                                                    />
+                                                    <Form.Control.Feedback type="invalid">
+                                                        {errors.description}
+                                                    </Form.Control.Feedback>
+                                                </Col>
+                                            </Form.Group>
+                                            <Row className="text-right">
+                                                <Col xs={0} sm={4}>
+                                                </Col>
+                                                <Col xs={12} sm={8} className="text-left">
+                                                    <Button variant="success" type="submit" className="mr-2">
+                                                        Добавить
+                                                    </Button>
+                                                    <Button variant="light" onClick={() => {this.setState({isExtended: false}); resetForm()}}>
+                                                        Отмена
+                                                    </Button>
+                                                </Col>
+                                            </Row>
+                                        </Form>
+                                    )}
+                                </Formik>
                             </Card.Body>
                         </Card>
                 </Collapse>

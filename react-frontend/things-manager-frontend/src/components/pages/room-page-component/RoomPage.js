@@ -29,7 +29,7 @@ import { getUsers } from '../../../selectors/userSelector';
 import { DeletionErrorModal } from '../../page-components/deletion_error_modal/DeletionErrorModal';
 import { getRoomDataById, savePlace, deletePlaceById, getPlacesByPlaceType } from '../../../api/placeService';
 import * as Moment from 'moment';
-import BuildingTypeahead from '../../page-components/building_typeahead/BuildingTypeahead';
+import BuildingTypeahead from '../../page-components/typeaheads/building_typeahead/BuildingTypeahead';
 
 const mapStateToProps = state => ({
     users: getUsers(state),

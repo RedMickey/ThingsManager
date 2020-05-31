@@ -39,3 +39,16 @@ export function saveItem(item, token) {
     })
     .then(handleJsonResponse);
 }
+
+export function updateItem(item, token) {
+    return fetch(BACKEND_CONFIG.serverURL + "/item/updateItem", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json;charset=utf-8",
+            "Authorization": `Bearer ${token}`,
+        },
+        mode: "cors",
+        body: JSON.stringify(item),
+    })
+    .then(handleJsonResponse);
+}

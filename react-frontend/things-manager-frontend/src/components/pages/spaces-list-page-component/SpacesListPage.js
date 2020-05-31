@@ -24,6 +24,7 @@ import * as Yup from 'yup';
 import * as Moment from 'moment';
 import './SpacesListPage.css';
 import { getUsers } from '../../../selectors/userSelector';
+import { DEFAULT_STRINGS } from '../../../utils/string_constants/defaultStrings';
 import { 
     savePlace, 
     getSpaceStatistics, 
@@ -39,8 +40,6 @@ const mapStateToProps = state => ({
 });
 
 export class SpacesListPage extends Component {
-    
-    NO_DATA_STRING = "Нет данных";
 
     constructor (props) {
         super(props);
@@ -356,13 +355,13 @@ export class SpacesListPage extends Component {
                                 <td>
                                     {space.roomName 
                                         ? <Link to={`/room/${space.idRoom}`}>{space.roomName}</Link>
-                                        : <div>{this.NO_DATA_STRING}</div>
+                                        : <div>{DEFAULT_STRINGS.NO_DATA_STRING}</div>
                                     }
                                 </td>
                                 <td>
                                     {space.buildingName 
                                         ? <Link to={`/building/${space.idBuilding}`}>{space.buildingName}</Link>
-                                        : <div>{this.NO_DATA_STRING}</div>
+                                        : <div>{DEFAULT_STRINGS.NO_DATA_STRING}</div>
                                     }
                                 </td>
                                 <td>{Moment(space.creationTimestamp).format("HH:mm DD.MM.YY")}</td>

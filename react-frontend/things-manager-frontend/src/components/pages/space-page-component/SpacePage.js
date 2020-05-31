@@ -45,7 +45,6 @@ const mapStateToProps = state => ({
 });
 
 export class SpacePage extends Component {
-    NO_DATA_STRING = "Нет данных";
 
     constructor (props) {
         super(props);
@@ -73,6 +72,9 @@ export class SpacePage extends Component {
                 .required('Заполните это поле'),
             description: Yup.string(),
         });
+
+        this.typeaheadBuilding = undefined;
+        this.typeaheadRoom = undefined;
 
         this.onDeleteBuilding = this.onDeleteBuilding.bind(this);
     }

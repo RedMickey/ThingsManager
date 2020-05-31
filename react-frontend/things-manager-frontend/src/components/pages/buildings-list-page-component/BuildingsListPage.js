@@ -30,8 +30,6 @@ const mapStateToProps = state => ({
 });
 
 export class BuildingsListPage extends Component {
-    
-    NO_DATA_STRING = "Нет данных";
 
     constructor (props) {
         super(props);

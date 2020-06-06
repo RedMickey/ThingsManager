@@ -178,8 +178,9 @@ export class ThingsListPage extends Component {
     }
 
     setSelectedBuilding(setFieldValueFunc, propertyName, newValue) {
-        newValue.id = TypeaheadHelper.tryToFindItemIdInTypeaheadOptions(newValue, "buildingOptions", this);
-        if (!newValue.id) {
+        try {
+            newValue.id = TypeaheadHelper.tryToFindItemIdInTypeaheadOptions(newValue, "buildingOptions", this);
+        } catch (err) {
             this.setState({
                 roomOptions: []
             });
@@ -199,8 +200,9 @@ export class ThingsListPage extends Component {
     }
 
     setSelectedRoom(setFieldValueFunc, propertyName, newValue) {
-        newValue.id = TypeaheadHelper.tryToFindItemIdInTypeaheadOptions(newValue, "roomOptions", this);
-        if (!newValue.id) {
+        try {
+            newValue.id = TypeaheadHelper.tryToFindItemIdInTypeaheadOptions(newValue, "roomOptions", this);
+        } catch (err) {
             this.setState({
                 spaceOptions: []
             });
@@ -220,8 +222,9 @@ export class ThingsListPage extends Component {
     }
 
     setSelectedSpace(setFieldValueFunc, propertyName, newValue) {
-        newValue.id = TypeaheadHelper.tryToFindItemIdInTypeaheadOptions(newValue, "spaceOptions", this);
-        if (!newValue.id) {
+        try {
+            newValue.id = TypeaheadHelper.tryToFindItemIdInTypeaheadOptions(newValue, "spaceOptions", this);
+        } catch (err) {
             setFieldValueFunc(propertyName, {id: undefined, name: ""});
             return;
         }
@@ -229,8 +232,9 @@ export class ThingsListPage extends Component {
     }
 
     setSelectedCategory(setFieldValueFunc, propertyName, newValue) {
-        newValue.id = TypeaheadHelper.tryToFindItemIdInTypeaheadOptions(newValue, "categoryOptions", this);
-        if (!newValue.id) {
+        try {
+            newValue.id = TypeaheadHelper.tryToFindItemIdInTypeaheadOptions(newValue, "categoryOptions", this);
+        } catch (err) {
             setFieldValueFunc(propertyName, {id: undefined, name: ""});
             return;
         }

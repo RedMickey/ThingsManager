@@ -125,8 +125,9 @@ export class SpacesListPage extends Component {
     }
 
     setSelectedBuilding(setFieldValueFunc, propertyName, newValue) {
-        newValue.id = TypeaheadHelper.tryToFindItemIdInTypeaheadOptions(newValue, "buildingOptions", this);
-        if (!newValue.id) {
+        try {
+            newValue.id = TypeaheadHelper.tryToFindItemIdInTypeaheadOptions(newValue, "buildingOptions", this);
+        } catch (err) {
             this.setState({
                 roomOptions: []
             });
@@ -146,11 +147,13 @@ export class SpacesListPage extends Component {
     }
 
     setSelectedRoom(setFieldValueFunc, propertyName, newValue) {
-        newValue.id = TypeaheadHelper.tryToFindItemIdInTypeaheadOptions(newValue, "roomOptions", this);
-        if (!newValue.id) {
+        try {
+            newValue.id = TypeaheadHelper.tryToFindItemIdInTypeaheadOptions(newValue, "roomOptions", this);
+        } catch (err) {
             setFieldValueFunc(propertyName, {id: undefined, name: ""});
             return;
         }
+        
         setFieldValueFunc(propertyName, newValue);
     }
 

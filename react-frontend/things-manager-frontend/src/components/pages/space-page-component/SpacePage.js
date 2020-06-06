@@ -16,11 +16,6 @@ import {
     Table,
     Alert
 } from 'react-bootstrap';
-
-import { Typeahead, AsyncTypeahead } from 'react-bootstrap-typeahead';
-import 'react-bootstrap-typeahead/css/Typeahead.css';
-import 'react-bootstrap-typeahead/css/Typeahead-bs4.css';
-
 import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { Formik } from 'formik';
@@ -171,8 +166,9 @@ export class SpacePage extends Component {
     }
 
     setSelectedBuilding(setFieldValueFunc, propertyName, newValue) {
-        newValue.id = TypeaheadHelper.tryToFindItemIdInTypeaheadOptions(newValue, "buildingOptions");
-        if (!newValue.id) {
+        try {
+            newValue.id = TypeaheadHelper.tryToFindItemIdInTypeaheadOptions(newValue, "buildingOptions");
+        } catch (err) {
             this.setState({
                 roomOptions: []
             });
@@ -192,16 +188,17 @@ export class SpacePage extends Component {
     }
 
     setSelectedRoom(setFieldValueFunc, propertyName, newValue) {
-        newValue.id = TypeaheadHelper.tryToFindItemIdInTypeaheadOptions(newValue, "roomOptions");
-        if (!newValue.id) {
+        try {
+            newValue.id = TypeaheadHelper.tryToFindItemIdInTypeaheadOptions(newValue, "roomOptions");
+        } catch (err) {
             setFieldValueFunc(propertyName, {id: undefined, name: ""});
             return;
         }
+        
         setFieldValueFunc(propertyName, newValue);
     }
 
     onDeleteBuilding() {
-        console.log(this);
         if (this.state.thingCount > 0) {
             const errorMessage = `Невозможно удалить место хранения т.к. в нем находится ${this.state.thingCount} вещей.`
             this.setState({

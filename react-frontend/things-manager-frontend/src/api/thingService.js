@@ -52,3 +52,16 @@ export function updateItem(item, token) {
     })
     .then(handleJsonResponse);
 }
+
+export function deleteItemById(itemId, token) {
+    return fetch(BACKEND_CONFIG.serverURL + "/item/deleteItemById", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json;charset=utf-8",
+            "Authorization": `Bearer ${token}`,
+        },
+        mode: "cors",
+        body: JSON.stringify({itemId}),
+    })
+    .then(handleJsonResponse);
+}

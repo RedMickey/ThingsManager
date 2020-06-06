@@ -20,7 +20,8 @@ import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
 import './ThingPage.css';
 import { getUsers } from '../../../selectors/userSelector';
-import { getItemById } from '../../../api/thingService';
+import { DeletionErrorModal } from '../../page-components/deletion_error_modal/DeletionErrorModal';
+import { getItemById, deleteItemById } from '../../../api/thingService';
 import { DEFAULT_STRINGS } from '../../../utils/string_constants/defaultStrings';
 import * as Moment from 'moment';
 import * as Yup from 'yup';
@@ -80,7 +81,7 @@ export class ThingPage extends Component {
             description: Yup.string(),
         });
 
-        console.log(this.props.match.params);
+        this.onDeleteItem = this.onDeleteItem.bind(this);
     }
 
     componentDidMount() {
@@ -197,8 +198,9 @@ export class ThingPage extends Component {
     }
 
     setSelectedBuilding(setFieldValueFunc, propertyName, newValue) {
-        newValue.id = TypeaheadHelper.tryToFindItemIdInTypeaheadOptions(newValue, "buildingOptions", this);
-        if (!newValue.id) {
+        try {
+            newValue.id = TypeaheadHelper.tryToFindItemIdInTypeaheadOptions(newValue, "buildingOptions", this);
+        } catch (err) {
             this.setState({
                 roomOptions: []
             });
@@ -218,8 +220,9 @@ export class ThingPage extends Component {
     }
 
     setSelectedRoom(setFieldValueFunc, propertyName, newValue) {
-        newValue.id = TypeaheadHelper.tryToFindItemIdInTypeaheadOptions(newValue, "roomOptions", this);
-        if (!newValue.id) {
+        try {
+            newValue.id = TypeaheadHelper.tryToFindItemIdInTypeaheadOptions(newValue, "roomOptions", this);
+        } catch (err) {
             this.setState({
                 spaceOptions: []
             });
@@ -239,21 +242,39 @@ export class ThingPage extends Component {
     }
 
     setSelectedSpace(setFieldValueFunc, propertyName, newValue) {
-        newValue.id = TypeaheadHelper.tryToFindItemIdInTypeaheadOptions(newValue, "spaceOptions", this);
-        if (!newValue.id) {
+        try {
+            newValue.id = TypeaheadHelper.tryToFindItemIdInTypeaheadOptions(newValue, "spaceOptions", this);
+        } catch (err) {
             setFieldValueFunc(propertyName, {id: undefined, name: ""});
             return;
         }
+        
         setFieldValueFunc(propertyName, newValue);
     }
 
     setSelectedCategory(setFieldValueFunc, propertyName, newValue) {
-        newValue.id = TypeaheadHelper.tryToFindItemIdInTypeaheadOptions(newValue, "categoryOptions", this);
-        if (!newValue.id) {
+        try {
+            newValue.id = TypeaheadHelper.tryToFindItemIdInTypeaheadOptions(newValue, "categoryOptions", this);
+        } catch (err) {
             setFieldValueFunc(propertyName, {id: undefined, name: ""});
             return;
         }
+        
         setFieldValueFunc(propertyName, newValue);
+    }
+
+    onDeleteItem() {
+        deleteItemById(this.state.thingWithPlaces.item.idItem, this.props.users[0].token)
+            .then(() => {
+                this.props.history.push("/things");
+            })
+            .catch(err => {
+                const errorMessage = `Невозможно удалить вещь "${this.state.thingName}"`;
+                this.setState({
+                    isShownDeletionErrorModal: true,
+                    deletionErrorMessage: errorMessage,
+                });
+            });
     }
 
     render() {
@@ -280,6 +301,11 @@ export class ThingPage extends Component {
                         <Image src="/images/box.jpg" className="img-fluid" thumbnail />
                     </Col>
                 </Row>
+                <DeletionErrorModal
+                    show={this.state.isShownDeletionErrorModal}
+                    onHide={() => this.setState({isShownDeletionErrorModal: false})}
+                    errorMessage={this.state.deletionErrorMessage}
+                />
                 <Row className="mt-3">
                     <Col xs={12} md={6}>
                         <Card bg="light"> 
@@ -343,7 +369,7 @@ export class ThingPage extends Component {
                         <Button variant="secondary" className="mb-2">Отсутствует</Button>
                     </Col>
                     <Col xs={4} className="text-right">
-                        <Button variant="danger" className="mb-2">
+                        <Button variant="danger" className="mb-2" onClick={this.onDeleteItem}>
                             <span class="oi oi-trash"></span> Удалить
                         </Button>
                     </Col>

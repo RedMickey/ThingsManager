@@ -1,7 +1,9 @@
 package com.example.michel.rest_api.controllers;
 
+import com.example.michel.rest_api.models.FullPlace;
 import com.example.michel.rest_api.models.Place;
 
+import com.example.michel.rest_api.models.auxiliary_models.request_body.SearchRequestBody;
 import com.example.michel.rest_api.services.search.BuildingSearchService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,9 +22,9 @@ public class SearchController {
     private BuildingSearchService buildingSearchService;
 
     @RequestMapping(value = "/place", method = RequestMethod.POST)
-    public List<Place> search(@RequestBody Map<String, String> req) {
-        List<Place> searchResults = null;
-        searchResults = buildingSearchService.fuzzySearch(req.get("searchTmp"));
+    public List<FullPlace> search(@RequestBody SearchRequestBody requestBody) {
+        List<FullPlace> searchResults = null;
+        searchResults = buildingSearchService.fuzzySearch(requestBody.getSearchTmp(), requestBody.getUserId(), requestBody.getPlaceTypeId());
         return searchResults;
     }
 }

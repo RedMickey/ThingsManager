@@ -111,4 +111,9 @@ public class PlaceController {
         placeService.deletePlaceById(req.get("placeId"));
         return Collections.singletonMap("deleted", true);
     }
+
+    @PostMapping(value = "/getPlacesByOuterPlaceId", produces = "application/json")
+    public List<Place> getPlacesByOuterId(@RequestBody Map<String, Integer> req) {
+        return placeService.findPlacesByIdUserAndIdOuterPlace(req.get("userId"), req.get("outerPlaceId"));
+    }
 }

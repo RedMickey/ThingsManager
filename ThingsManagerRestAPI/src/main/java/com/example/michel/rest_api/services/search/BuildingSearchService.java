@@ -1,5 +1,6 @@
 package com.example.michel.rest_api.services.search;
 
+import com.example.michel.rest_api.models.FullPlace;
 import com.example.michel.rest_api.models.Place;
 import org.apache.lucene.search.Query;
 import org.hibernate.Criteria;
@@ -16,7 +17,9 @@ import javax.annotation.PostConstruct;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.NoResultException;
+import javax.persistence.criteria.CriteriaBuilder;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class BuildingSearchService {
@@ -40,24 +43,26 @@ public class BuildingSearchService {
     }
 
     @Transactional
-    public List<Place> fuzzySearch(String searchTerm) {
+    public List<FullPlace> fuzzySearch(String searchTerm, int userId, int placeTypeId) {
 
         FullTextEntityManager fullTextEntityManager = Search.getFullTextEntityManager(centityManager);
-        QueryBuilder qb = fullTextEntityManager.getSearchFactory().buildQueryBuilder().forEntity(Place.class).get();
+        QueryBuilder qb = fullTextEntityManager.getSearchFactory().buildQueryBuilder().forEntity(FullPlace.class).get();
         Query luceneQuery = qb.keyword().fuzzy().withEditDistanceUpTo(2).withPrefixLength(0).onFields("placeName")
                 .matching(searchTerm).createQuery();
 
-        javax.persistence.Query jpaQuery = fullTextEntityManager.createFullTextQuery(luceneQuery, Place.class);
+        CriteriaBuilder criteriaBuilder = fullTextEntityManager.getCriteriaBuilder();
+
+        javax.persistence.Query jpaQuery = fullTextEntityManager.createFullTextQuery(luceneQuery, FullPlace.class);
 
         // execute search
 
-        List<Place> placeList = null;
+        List<FullPlace> placeList = null;
         try {
             placeList = jpaQuery.getResultList();
         } catch (NoResultException nre) {
             nre.printStackTrace();
         }
 
-        return placeList;
+        return placeList.stream().filter(place -> place.getIdPlaceType() == placeTypeId && place.getIdUser() == userId).collect(Collectors.toList());
     }
 }

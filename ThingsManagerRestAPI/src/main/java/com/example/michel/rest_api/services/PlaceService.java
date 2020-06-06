@@ -28,6 +28,12 @@ public class PlaceService {
         return placeRepository.save(place);
     }
 
+    public List<Place> findPlacesByIdUserAndIdOuterPlace(Integer userId, Integer outerPlaceId) {
+        Place outerPlace = new Place();
+        outerPlace.setIdPlace(outerPlaceId);
+        return placeRepository.findPlacesByIdUserAndOuterPlace(userId, outerPlace);
+    }
+
     public void deletePlaceById(Integer placeId) {
         placeRepository.deleteById(placeId);
     }

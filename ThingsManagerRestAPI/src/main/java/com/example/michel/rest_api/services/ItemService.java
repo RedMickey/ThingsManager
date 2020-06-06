@@ -39,11 +39,23 @@ public class ItemService {
         return new ItemWithPlaces(places, item.cloneWithoutPlaces());
     }
 
+    public Item saveItem(Item item) {
+        return itemRepository.save(item);
+    }
+
+    public ItemWithPlaces updateItem(Item item) {
+        Item updatedItem = itemRepository.save(item);
+        return createItemWithPlaces(updatedItem);
+    }
+
+    public void deleteItemById(Integer itemId) {
+        itemRepository.deleteById(itemId);
+    }
+
     private void mapPlacesToArray(Place place, Place[] places) {
         if (place != null) {
             mapPlacesToArray(place.getOuterPlace(), places);
             places[place.getIdPlaceType()-1] = place.cloneWithoutOuterPlaces();
         }
     }
-
 }

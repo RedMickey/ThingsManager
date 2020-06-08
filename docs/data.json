@@ -1,4 +1,10 @@
 {
-    "test": 3,
-    "RNTPreview": 0.5
+    "experiments": [
+        {
+            "experimentName": "RNTPreviewPrompt",
+            "popCoveragePercent": 0.8,
+            "enabled": true,
+            "expCodeURL": "https://redmickey.github.io/ThingsManager/experimentsCode/RNTPreviewPromptExp.js"
+        }
+    ]
 }

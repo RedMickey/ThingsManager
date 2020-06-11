@@ -10,7 +10,7 @@
         "enabled": true
     },
     {
-        "experimentName": "experiment2",
+        "experimentName": "experiment3",
         "popCoveragePercent": 0.8,
         "enabled": false
     }

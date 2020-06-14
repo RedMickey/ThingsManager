@@ -28,10 +28,7 @@ public class ResourceServerOAuth2Config extends ResourceServerConfigurerAdapter 
     @Override
     public void configure(HttpSecurity http) throws Exception {
         http.authorizeRequests()
-                .antMatchers("/user/sign-up")
-                .permitAll()
-                .antMatchers("/user/test2")
-                //.access("hasRole('ADMIN')")
+                .antMatchers("/user/sign-up", "/images/**")
                 .permitAll()
                 .anyRequest().authenticated()
                 .and()

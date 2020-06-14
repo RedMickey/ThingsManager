@@ -1,12 +1,14 @@
 package com.example.michel.rest_api.controllers;
 
 import com.example.michel.rest_api.models.Place;
+import com.example.michel.rest_api.models.auxiliary_models.request_body.place.PlaceData;
 import com.example.michel.rest_api.models.auxiliary_models.response_body.building.BuildingData;
 import com.example.michel.rest_api.models.auxiliary_models.response_body.building.BuildingStatistics;
 import com.example.michel.rest_api.models.auxiliary_models.response_body.room.RoomData;
 import com.example.michel.rest_api.models.auxiliary_models.response_body.room.RoomStatistics;
 import com.example.michel.rest_api.models.auxiliary_models.response_body.space.SpaceData;
 import com.example.michel.rest_api.models.auxiliary_models.response_body.space.SpaceStatistics;
+import com.example.michel.rest_api.services.PlaceImageService;
 import com.example.michel.rest_api.services.PlaceService;
 import com.example.michel.rest_api.services.auxiliary_services.BuildingStatisticsService;
 import com.example.michel.rest_api.services.auxiliary_services.RoomStatisticsService;
@@ -36,6 +38,9 @@ public class PlaceController {
 
     @Autowired
     private SpaceStatisticsService spaceStatisticsService;
+
+    @Autowired
+    private PlaceImageService placeImageService;
 
     /*@PostMapping(value = "/getPlaceById", produces = "application/json")
     public Place getPlaceById(@RequestBody Map<String, Integer> req){
@@ -104,6 +109,13 @@ public class PlaceController {
     @PostMapping(value = "/savePlace", produces = "application/json")
     public Place savePlace(@RequestBody Place place) {
         return placeService.savePlace(place);
+    }
+
+    @PostMapping(value = "/savePlaceAndImages", produces = "application/json")
+    public Place savePlaceAndImages(@RequestBody PlaceData placeData) {
+        Place newPlace = placeService.savePlace(placeData.getPlace());
+        placeImageService.saveImages(placeData.getPlaceImages64Base(), newPlace.getIdPlace());
+        return placeData.getPlace();
     }
 
     @PostMapping(value = "/deletePlaceById", produces = "application/json")

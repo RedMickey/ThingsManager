@@ -21,6 +21,8 @@
 
 target/
 
+storage/
+
 # Compiled class file
 *.class
 

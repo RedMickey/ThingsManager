@@ -71,7 +71,6 @@ export class ThingsListPage extends Component {
         });
 
         this.onThingAdd = this.onThingAdd.bind(this);
-
     }
 
     componentDidMount() {

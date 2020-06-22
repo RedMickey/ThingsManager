@@ -29,6 +29,22 @@ export function savePlace(place, token) {
     .then(handleJsonResponse);
 }
 
+export function savePlaceAndImages(place, placeImages, token) {
+    return fetch(BACKEND_CONFIG.serverURL + "/place/savePlaceAndImages", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json;charset=utf-8",
+            "Authorization": `Bearer ${token}`,
+        },
+        mode: "cors",
+        body: JSON.stringify({
+            place, 
+            placeImages64Base: placeImages,
+        }),
+    })
+    .then(handleJsonResponse);
+}
+
 export function deletePlaceById(placeId, token) {
     return fetch(BACKEND_CONFIG.serverURL + "/place/deletePlaceById", {
         method: "POST",

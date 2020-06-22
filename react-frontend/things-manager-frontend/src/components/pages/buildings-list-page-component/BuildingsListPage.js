@@ -22,7 +22,8 @@ import { Formik } from 'formik';
 import * as Yup from 'yup';
 import './BuildingsListPage.css';
 import { getUsers } from '../../../selectors/userSelector';
-import { savePlace, getBuildingStatistics } from '../../../api/placeService';
+import { ImageUploader } from '../../page-components/image-uploader/ImageUploader';
+import { savePlaceAndImages, getBuildingStatistics } from '../../../api/placeService';
 import * as Moment from 'moment';
 
 const mapStateToProps = state => ({
@@ -44,7 +45,10 @@ export class BuildingsListPage extends Component {
             buildingName: Yup.string()
                 .required('Заполните это поле'),
             description: Yup.string(),
+            imgPromises: Yup.array(),
         });
+
+        this.imageUploader = undefined;
 
         this.onBuildingAdd = this.onBuildingAdd.bind(this);
     }
@@ -63,14 +67,28 @@ export class BuildingsListPage extends Component {
 
     onBuildingAdd(values) {
         console.log(values);
-        savePlace({
+
+        Promise.resolve()
+        .then(() => {
+            if (values.imgPromises.length > 0) {
+                return Promise.allSettled(values.imgPromises)
+                .then(results => {
+                    return results.filter(imgRes => imgRes.status === "fulfilled")
+                        .map(imgRes => imgRes.value);
+                });
+            }
+            return [];
+        })
+        .then((placeImages) => {
+            return savePlaceAndImages({
             placeName: values.buildingName,
             description: values.description,
             idPlaceType: 1,
             idUser: this.props.users[0].userId,
         },
+        placeImages,
         this.props.users[0].token
-        )
+        );})
         .then(savedBuilding => {
             console.log(savedBuilding);
             this.setState({addedSuccessfully: true});
@@ -178,9 +196,13 @@ export class BuildingsListPage extends Component {
                                         this.onBuildingAdd(values);
                                         actions.resetForm();
                                     }}
+                                    onReset={(values, formikBag) => {
+                                        this.imageUploader.reset();
+                                    }}
                                     initialValues={{
                                         buildingName: "",
                                         description: "",
+                                        imgPromises: [],
                                     }}
                                 >
                                     {({
@@ -192,6 +214,7 @@ export class BuildingsListPage extends Component {
                                         isValid,
                                         errors,
                                         resetForm,
+                                        setFieldValue,
                                     }) => (
                                         <Form noValidate onSubmit={handleSubmit}>
                                             <Form.Group as={Row} >
@@ -200,7 +223,7 @@ export class BuildingsListPage extends Component {
                                                 </Form.Label>
                                                 <Col sm="8">
                                                     <Form.Control 
-                                                        placeholder = "Название строения"
+                                                        placeholder = "Например, «Моя квартира»"
                                                         type = "text"
                                                         name = "buildingName"
                                                         value={values.buildingName}
@@ -215,11 +238,23 @@ export class BuildingsListPage extends Component {
                                             </Form.Group>
                                             <Form.Group as={Row} >
                                                 <Form.Label column sm="4" className="text-right">
+                                                    Изображения
+                                                </Form.Label>
+                                                <Col sm="8">
+                                                    <ImageUploader 
+                                                        setFieldValue={setFieldValue}
+                                                        propertyName="imgPromises"
+                                                        ref={(imageUploader) => this.imageUploader = imageUploader}
+                                                    />
+                                                </Col>
+                                            </Form.Group>
+                                            <Form.Group as={Row} >
+                                                <Form.Label column sm="4" className="text-right">
                                                     Примечание
                                                 </Form.Label>
                                                 <Col sm="8">
                                                     <Form.Control as="textarea" rows="3" 
-                                                        placeholder = "Примечание"
+                                                        placeholder = "Например, «Квартира где я живу. Город Солнечный, ул. Радужная»"
                                                         name = "description"
                                                         value={values.description}
                                                         onChange={handleChange}

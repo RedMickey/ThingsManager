@@ -13,7 +13,8 @@ import {
     ButtonToolbar,
     Collapse,
     Card,
-    Table
+    Table,
+    Carousel
 } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
@@ -46,6 +47,7 @@ export class BuildingPage extends Component {
             updatedSuccessfully: false,
             isShownDeletionErrorModal: false,
             deletionErrorMessage: "",
+            placeImages: [],
         };
 
         this.buildingSchema = Yup.object().shape({
@@ -74,6 +76,7 @@ export class BuildingPage extends Component {
                     creationTimestamp: buildingData.place.creationTimestamp,
                     updateTimestamp: buildingData.place.updateTimestamp,
                     status: buildingData.place.itemStatus.statusName,
+                    placeImages: buildingData.placeImages,
                 });
                 console.log(buildingData);
             });
@@ -108,7 +111,6 @@ export class BuildingPage extends Component {
     }
 
     onDeleteBuilding() {
-        console.log(this);
         if (this.state.roomCount > 0 || this.state.spaceCount > 0 || this.state.thingCount > 0) {
             const errorMessage = `Невозможно удалить строение т.к. в нем находится ${this.state.roomCount} помещений, ` + 
                 `${this.state.spaceCount} мест хранения и ${this.state.thingCount} вещей.`
@@ -144,8 +146,21 @@ export class BuildingPage extends Component {
                 </Row>
 
                 <Row className="mt-3">
-                    <Col xs={6} sm={5} md={4}>
-                        <Image src="/images/box.jpg" className="img-fluid" thumbnail />
+                    <Col md={5}>
+                        {this.state.placeImages.length > 0 &&   
+                            <Carousel interval={null}>
+                                {
+                                    this.state.placeImages.map(image => 
+                                        <Carousel.Item>
+                                            <img
+                                                className="d-block w-100"
+                                                src={image.imageLocation}
+                                            />
+                                        </Carousel.Item>
+                                    )
+                                }
+                            </Carousel>
+                        }
                     </Col>
                 </Row>
                 <DeletionErrorModal
@@ -266,7 +281,6 @@ export class BuildingPage extends Component {
                                                     </Form.Control.Feedback>
                                                 </Col>
                                             </Form.Group>
-                                            
                                             <Form.Group as={Row} controlId="formPlaintextEmail">
                                                 <Form.Label column sm="4" className="text-right">
                                                     Примечание

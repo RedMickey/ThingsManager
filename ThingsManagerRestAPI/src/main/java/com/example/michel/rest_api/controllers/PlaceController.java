@@ -1,6 +1,7 @@
 package com.example.michel.rest_api.controllers;
 
 import com.example.michel.rest_api.models.Place;
+import com.example.michel.rest_api.models.PlaceImage;
 import com.example.michel.rest_api.models.auxiliary_models.request_body.place.PlaceData;
 import com.example.michel.rest_api.models.auxiliary_models.response_body.building.BuildingData;
 import com.example.michel.rest_api.models.auxiliary_models.response_body.building.BuildingStatistics;
@@ -57,10 +58,11 @@ public class PlaceController {
     @PostMapping(value = "/getBuildingData", produces = "application/json")
     public BuildingData getBuildingData(@RequestBody Map<String, Integer> req) {
         Place building = placeService.findPlaceByIdUserAndIdPlace(req.get("userId"), req.get("placeId"));
+        List<PlaceImage> placeImages = placeImageService.getAllByIdPlace(building.getIdPlace());
         BuildingStatistics buildingStatistics = buildingStatisticsService.getBuildingStatisticsByPlaceId(req.get("userId"), req.get("placeId"));
         return new BuildingData(
                 buildingStatistics.getRoomCount(), buildingStatistics.getSpaceCount(),
-                buildingStatistics.getThingCount(), building
+                buildingStatistics.getThingCount(), building, placeImages
         );
     }
 
@@ -74,9 +76,10 @@ public class PlaceController {
     @PostMapping(value = "/getRoomData", produces = "application/json")
     public RoomData getRoomData(@RequestBody Map<String, Integer> req) {
         Place room = placeService.findPlaceByIdUserAndIdPlace(req.get("userId"), req.get("placeId"));
+        List<PlaceImage> placeImages = placeImageService.getAllByIdPlace(room.getIdPlace());
         RoomStatistics roomStatistics = roomStatisticsService.getRoomStatisticsByPlaceId(req.get("userId"), req.get("placeId"));
         return new RoomData(
-                roomStatistics.getSpaceCount(), roomStatistics.getThingCount(), room
+                roomStatistics.getSpaceCount(), roomStatistics.getThingCount(), room, placeImages
         );
     }
 
@@ -90,8 +93,9 @@ public class PlaceController {
     @PostMapping(value = "/getSpaceData", produces = "application/json")
     public SpaceData getSpaceData(@RequestBody Map<String, Integer> req) {
         Place space = placeService.findPlaceByIdUserAndIdPlace(req.get("userId"), req.get("placeId"));
+        List<PlaceImage> placeImages = placeImageService.getAllByIdPlace(space.getIdPlace());
         SpaceStatistics spaceStatistics = spaceStatisticsService.getSpaceStatisticsByPlaceId(req.get("userId"), req.get("placeId"));
-        return new SpaceData(spaceStatistics.getThingCount(), space);
+        return new SpaceData(spaceStatistics.getThingCount(), space, placeImages);
     }
 
     /*******************************************************General************************************************************/

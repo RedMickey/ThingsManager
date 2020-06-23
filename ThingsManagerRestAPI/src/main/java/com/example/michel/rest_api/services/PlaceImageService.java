@@ -6,6 +6,7 @@ import com.example.michel.rest_api.exception.image_files.ImageWriteException;
 import com.example.michel.rest_api.models.PlaceImage;
 import com.example.michel.rest_api.repositories.PlaceImageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
@@ -16,6 +17,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Base64;
+import java.util.List;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -25,12 +27,17 @@ import java.util.stream.Stream;
 public class PlaceImageService {
     private final Path placeImagesLocation;
     private final PlaceImageRepository placeImageRepository;
+    private final String baseReference;
+
+    @Value("${imageServer.URL}")
+    private String imageServerURL;
 
     @Autowired
     public PlaceImageService(
             PlaceImageRepository placeImageRepository,
             FileStorageProperties fileStorageProperties
     ) {
+        this.baseReference = "/images/placeImage/";
         this.placeImageRepository = placeImageRepository;
         this.placeImagesLocation = Paths.get(fileStorageProperties.getPlaceImagesPath())
                 .toAbsolutePath().normalize();
@@ -40,6 +47,25 @@ public class PlaceImageService {
         } catch (Exception ex) {
             System.out.println("Could not create the directory where the uploaded files will be stored.");
         }
+    }
+
+    public List<PlaceImage> getAllByIdPlace(Integer idPlace) {
+        return placeImageRepository.findAllByIdPlace(idPlace);
+    }
+
+    public void deleteImagesByIdPlace(Integer idPlace) {
+        List<PlaceImage> placeImages = placeImageRepository.findAllByIdPlace(idPlace);
+        placeImages.stream().map(placeImage -> {
+           String[] pathParts = placeImage.getImageLocation().split("/");
+           return pathParts[pathParts.length - 1];
+        });
+
+
+        placeImageRepository.deleteAllByIdPlace(idPlace);
+    }
+
+    public void deleteImage() {
+
     }
 
     public byte[] getImageAsByteArr(String imageName) throws ImageReadException {
@@ -68,8 +94,8 @@ public class PlaceImageService {
     public boolean saveImage(String base64Image, int placeId) {
         try {
             // Пока не реф, а обсолютный
-             String imgRefPath = writeImageFile(base64Image);
-             PlaceImage placeImage = new PlaceImage(0, imgRefPath, null, placeId);
+            String imgRefPath = writeImageFile(base64Image);
+            PlaceImage placeImage = new PlaceImage(0, imgRefPath, null, placeId);
             this.placeImageRepository.save(placeImage);
         } catch (Exception err) {
             return false;
@@ -102,7 +128,7 @@ public class PlaceImageService {
             File outputFile = new File(fullImagePath);
             ImageIO.write(image, imageExtension, outputFile);
 
-            return fullImagePath;
+            return imageServerURL + baseReference + imageName;
         } catch (Exception err) {
             throw new ImageWriteException(err);
         }
